@@ -3,6 +3,7 @@ import { initializeApp } from 'firebase/app';
 import { 
     getAuth, 
     signInWithRedirect,
+    getRedirectResult,
     GoogleAuthProvider, 
     onAuthStateChanged, 
     signOut
@@ -63,6 +64,16 @@ export default function App() {
 
     // --- AUTHENTICATION ---
     useEffect(() => {
+        // 1. Tangkap hasil redirect dari Google Sign-In
+        getRedirectResult(auth).then((result) => {
+            if (result) {
+                setUser(result.user);
+            }
+        }).catch((error) => {
+            console.error("Error during redirect login:", error);
+        });
+
+        // 2. Listener untuk status auth yang berjalan normal
         const unsubscribe = onAuthStateChanged(auth, (u) => {
             setUser(u);
             setLoading(false);
