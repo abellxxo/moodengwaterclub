@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { initializeApp } from 'firebase/app';
 import { 
     getAuth, 
-    signInWithPopup, 
+    signInWithRedirect,
     GoogleAuthProvider, 
     onAuthStateChanged, 
     signOut
@@ -114,7 +114,7 @@ export default function App() {
     };
 
     // --- ACTIONS ---
-    const handleLogin = () => signInWithPopup(auth, new GoogleAuthProvider());
+    const handleLogin = () => signInWithRedirect(auth, new GoogleAuthProvider());
     const handleLogout = () => signOut(auth);
 
     const updateWater = async (amount) => {
