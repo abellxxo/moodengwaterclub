@@ -2,8 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { initializeApp } from 'firebase/app';
 import { 
     getAuth, 
-    signInWithRedirect,
-    getRedirectResult,
+    signInWithPopup,
     GoogleAuthProvider, 
     onAuthStateChanged, 
     signOut
@@ -37,7 +36,7 @@ export default function App() {
     const [user, setUser] = useState(null);
     const [loading, setLoading] = useState(true);
     const [isUpdating, setIsUpdating] = useState(false);
-    const [isClaiming, setIsClaiming] = useState(false); // State anti double-tap
+    const [isClaiming, setIsClaiming] = useState(false);
     const [currentView, setCurrentView] = useState('home');
     
     const [userData, setUserData] = useState({
@@ -64,16 +63,6 @@ export default function App() {
 
     // --- AUTHENTICATION ---
     useEffect(() => {
-        // 1. Tangkap hasil redirect dari Google Sign-In
-        getRedirectResult(auth).then((result) => {
-            if (result) {
-                setUser(result.user);
-            }
-        }).catch((error) => {
-            console.error("Error during redirect login:", error);
-        });
-
-        // 2. Listener untuk status auth yang berjalan normal
         const unsubscribe = onAuthStateChanged(auth, (u) => {
             setUser(u);
             setLoading(false);
@@ -121,11 +110,21 @@ export default function App() {
     // --- TOAST HELPER ---
     const showToastMsg = (message, isSuccess = true) => {
         setToast({ show: true, message, isSuccess });
-        setTimeout(() => setToast({ show: false, message: '', isSuccess }), 2000);
+        setTimeout(() => setToast({ show: false, message: '', isSuccess }), 3000);
     };
 
     // --- ACTIONS ---
-    const handleLogin = () => signInWithRedirect(auth, new GoogleAuthProvider());
+    const handleLogin = async () => {
+        try {
+            // Gunakan Popup, ini yang paling didukung oleh iOS PWA terbaru
+            await signInWithPopup(auth, new GoogleAuthProvider());
+        } catch (error) {
+            console.error("Login Error:", error);
+            // Tampilkan pesan error di layar jika Safari memblokir popup
+            showToastMsg("Gagal login: " + error.message, false);
+        }
+    };
+    
     const handleLogout = () => signOut(auth);
 
     const updateWater = async (amount) => {
@@ -159,18 +158,16 @@ export default function App() {
     };
 
     const handleClaimReward = async () => {
-        if (isClaiming) return; // Cegah double tap
+        if (isClaiming) return;
 
         if (streakCount >= 7) { 
-            setIsClaiming(true); // Kunci tombol
+            setIsClaiming(true);
             try {
-                // Update database dulu
                 const userDocRef = doc(db, 'artifacts', appId, 'users', user.uid, 'data', 'tracker');
                 await setDoc(userDocRef, { streakResetDate: getLogicalDateStr() }, { merge: true });
                 
                 showToastMsg("Reward claimed! Streak reset.", true);
                 
-                // Cara paling aman untuk PWA membuka aplikasi eksternal (Deep Link)
                 const message = encodeURIComponent("Yay! I successfully completed my 7-day hydration streak! I'm ready to claim my Matcha reward 🍵✨");
                 window.location.href = `https://wa.me/6281231223796?text=${message}`;
                 
@@ -178,7 +175,7 @@ export default function App() {
                 console.error("Error claiming reward:", error);
                 showToastMsg("Failed to claim. Try again.", false);
             } finally {
-                setIsClaiming(false); // Buka kunci
+                setIsClaiming(false);
             }
         } else {
             showToastMsg(`Streak is not full yet (needs 7 days)!`, false);
@@ -197,12 +194,10 @@ export default function App() {
         let checkDate = new Date();
         let safety = 0;
         
-        // Cek mundur sampai maksimal 180 hari
         while (safety < 180) {
             safety++;
             let str = `${checkDate.getFullYear()}-${String(checkDate.getMonth() + 1).padStart(2, '0')}-${String(checkDate.getDate()).padStart(2, '0')}`;
             
-            // JIKA TANGGAL INI SAMA ATAU SEBELUM TANGGAL RESET (KLAIM), BERHENTI MENGHITUNG STREAK
             if (userData.streakResetDate && str <= userData.streakResetDate) break;
 
             if ((userData.history[str] || 0) >= userData.goal) {
@@ -279,6 +274,14 @@ export default function App() {
     // ==========================================
     if (!user) return (
         <div className="bg-[#F2F2F7] min-h-screen flex items-center justify-center font-sans text-[#1C1C1E] selection:bg-blue-200 antialiased relative overflow-hidden sm:py-10">
+            {/* TOAST KHUSUS UNTUK ERROR LOGIN */}
+            <div className={`absolute top-10 left-1/2 -translate-x-1/2 z-[60] transition-all duration-500 ${toast.show ? 'opacity-100 scale-100' : 'opacity-0 scale-95 pointer-events-none'}`}>
+                <div className="bg-red-50 px-5 py-3 rounded-xl shadow-lg border border-red-200 flex items-center gap-3">
+                    <span className="text-xl">⚠️</span>
+                    <span className="text-[12px] font-bold text-red-700">{toast.message}</span>
+                </div>
+            </div>
+
             <style dangerouslySetInnerHTML={{ __html: `
                 @keyframes float1 { 0%, 100% { transform: translateY(0px) scale(1); } 50% { transform: translateY(-12px) scale(1.05); } }
                 @keyframes float2 { 0%, 100% { transform: translateY(0px) scale(1); } 50% { transform: translateY(-8px) scale(1.08); } }
@@ -308,9 +311,7 @@ export default function App() {
                             <div className="bubble-1 absolute right-[25%] bottom-[70%] w-3 h-3 bg-cyan-200 rounded-full" style={{animationDelay: '2s'}}></div>
 
                             <div className="w-44 h-64 rounded-[3.5rem] p-2 bg-gradient-to-b from-[#F2F2F7] to-white shadow-[inset_0_2px_20px_rgba(0,0,0,0.05)] border border-gray-100 relative overflow-hidden flex items-end">
-                                <div 
-                                    className="water-fill w-full bg-gradient-to-t from-[#007AFF] via-[#148EFF] to-[#5AC8FA] relative rounded-[3rem] overflow-hidden shadow-[0_-8px_25px_rgba(0,122,255,0.3)]"
-                                >
+                                <div className="water-fill w-full bg-gradient-to-t from-[#007AFF] via-[#148EFF] to-[#5AC8FA] relative rounded-[3rem] overflow-hidden shadow-[0_-8px_25px_rgba(0,122,255,0.3)]">
                                     <div className="absolute top-0 left-0 right-0 h-6 bg-gradient-to-b from-white/40 to-transparent rounded-[100%] scale-150 -translate-y-1/2"></div>
                                     <div className="absolute inset-0 bg-gradient-to-r from-black/5 via-transparent to-white/10"></div>
                                 </div>
@@ -544,8 +545,8 @@ export default function App() {
                         <div className="w-full mt-5 flex flex-col items-center">
                             <button 
                                 onClick={handleClaimReward} 
-                                disabled={isClaiming} 
-                                className={`w-full bg-white rounded-[2rem] p-4 shadow-[0_5px_20px_rgba(0,0,0,0.03)] border border-gray-100 flex items-center justify-between transition-all ${isClaiming ? 'opacity-70 cursor-not-allowed' : 'active:scale-95'}`}
+                                disabled={isClaiming || streakCount < 7} 
+                                className={`w-full bg-white rounded-[2rem] p-4 shadow-[0_5px_20px_rgba(0,0,0,0.03)] border border-gray-100 flex items-center justify-between transition-all ${(isClaiming || streakCount < 7) ? 'opacity-70 cursor-not-allowed' : 'active:scale-95'}`}
                             >
                                 <div className="flex items-center gap-4">
                                     <div className="w-12 h-12 rounded-full bg-[#34C759]/10 flex items-center justify-center text-[26px]">🍵</div>
