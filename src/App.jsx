@@ -34,7 +34,12 @@ const appId = 'water-tracker-kita';
 export default function App() {
     // --- STATE ---
     const [user, setUser] = useState(null);
-    const [loading, setLoading] = useState(true);
+    
+    // State baru untuk mengatur alur loading agar tidak salah tempat
+    const [authResolved, setAuthResolved] = useState(false);
+    const [dataLoaded, setDataLoaded] = useState(false);
+    const [isManualLoggingIn, setIsManualLoggingIn] = useState(false);
+    
     const [isUpdating, setIsUpdating] = useState(false);
     const [isClaiming, setIsClaiming] = useState(false);
     const [currentView, setCurrentView] = useState('home');
@@ -65,17 +70,17 @@ export default function App() {
     useEffect(() => {
         const unsubscribe = onAuthStateChanged(auth, (u) => {
             setUser(u);
-            // Tambahkan sedikit minimum delay untuk splash screen effect (opsional, biar transisi lebih smooth)
-            setTimeout(() => {
-                setLoading(false);
-            }, 600);
+            setAuthResolved(true); // Menandakan bahwa pengecekan awal auth sudah selesai
         });
         return () => unsubscribe();
     }, []);
 
     // --- FIRESTORE SYNC ---
     useEffect(() => {
-        if (!user) return;
+        if (!user) {
+            setDataLoaded(false);
+            return;
+        }
 
         const userDocRef = doc(db, 'artifacts', appId, 'users', user.uid, 'data', 'tracker');
         
@@ -95,9 +100,18 @@ export default function App() {
                 setDoc(userDocRef, initialData);
                 setUserData(initialData);
             }
+            
+            // Jeda sedikit agar layar Splash tidak berkedip terlalu cepat
+            setTimeout(() => {
+                setDataLoaded(true);
+                setIsManualLoggingIn(false);
+            }, 800);
+
         }, (error) => {
             console.error("Firestore sync error:", error);
             setIsUpdating(false);
+            setDataLoaded(true);
+            setIsManualLoggingIn(false);
         });
 
         return () => unsubscribe();
@@ -118,10 +132,12 @@ export default function App() {
 
     // --- ACTIONS ---
     const handleLogin = async () => {
+        setIsManualLoggingIn(true); // Panggil Splash Screen
         try {
             await signInWithPopup(auth, new GoogleAuthProvider());
         } catch (error) {
             console.error("Login Error:", error);
+            setIsManualLoggingIn(false); // Matikan Splash Screen jika gagal/batal
             showToastMsg("Gagal login: " + error.message, false);
         }
     };
@@ -263,13 +279,59 @@ export default function App() {
         return [...blanks, ...days];
     };
 
-    // --- RENDERING ---
-    
+    // --- GLOBAL CSS INJECTION UNTUK ANTI-BOUNCE ---
+    const globalCss = `
+        html, body {
+            overflow: hidden !important;
+            position: fixed !important;
+            width: 100% !important;
+            height: 100% !important;
+            overscroll-behavior: none !important;
+            touch-action: none;
+            margin: 0;
+            padding: 0;
+        }
+        #root {
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+        }
+        /* Ijinkan area dalam aplikasi untuk scroll normal tanpa efek karet */
+        main, .overflow-y-auto {
+            touch-action: pan-y;
+            overscroll-behavior-y: contain; 
+        }
+        * { -webkit-tap-highlight-color: transparent; user-select: none; } 
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+        input[type="number"]::-webkit-inner-spin-button,
+        input[type="number"]::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
+        input[type="number"] { -moz-appearance: textfield; }
+        
+        @keyframes float1 { 0%, 100% { transform: translateY(0px) scale(1); } 50% { transform: translateY(-12px) scale(1.05); } }
+        @keyframes float2 { 0%, 100% { transform: translateY(0px) scale(1); } 50% { transform: translateY(-8px) scale(1.08); } }
+        @keyframes float3 { 0%, 100% { transform: translateY(0px) scale(1); } 50% { transform: translateY(-15px) scale(0.95); } }
+        @keyframes fillup { 0% { height: 0%; opacity: 0; } 5% { opacity: 1; } 100% { height: 60%; opacity: 1; } }
+        .bubble-1 { animation: float1 4s ease-in-out infinite; }
+        .bubble-2 { animation: float2 5s ease-in-out infinite 0.8s; }
+        .bubble-3 { animation: float3 3.5s ease-in-out infinite 1.5s; }
+        .water-fill { animation: fillup 1.5s cubic-bezier(0.2, 0.8, 0.2, 1) forwards; }
+    `;
+
     // ==========================================
-    // SPLASH SCREEN (PENGGANTI SPINNER BIRU)
+    // 1. TAHAP PENGECEKAN AUTH AWAL (Layar Kosong agar tidak flashing)
     // ==========================================
-    if (loading) return (
-        <div className="bg-[#F2F2F7] min-h-screen flex items-center justify-center font-sans text-[#1C1C1E] antialiased sm:py-10">
+    if (!authResolved) return (
+        <div className="bg-[#F2F2F7] fixed inset-0 w-full h-full z-50">
+            <style dangerouslySetInnerHTML={{ __html: globalCss }} />
+        </div>
+    );
+
+    // ==========================================
+    // 2. SPLASH SCREEN (Muncul saat login MANUAL ATAU memuat data dari Firebase)
+    // ==========================================
+    if (isManualLoggingIn || (user && !dataLoaded)) return (
+        <div className="bg-[#F2F2F7] fixed inset-0 w-full h-full flex items-center justify-center font-sans text-[#1C1C1E] antialiased z-50">
+            <style dangerouslySetInnerHTML={{ __html: globalCss }} />
             <main className="bg-white w-full h-[100dvh] sm:h-[844px] sm:max-w-[390px] sm:rounded-[3rem] flex flex-col items-center justify-center relative sm:shadow-2xl overflow-hidden">
                 <div className="absolute top-[-5%] right-[-10%] w-[80vw] max-w-[400px] h-[80vw] max-h-[400px] bg-blue-100/40 rounded-full blur-[80px] pointer-events-none"></div>
                 <div className="absolute bottom-[10%] left-[-10%] w-[60vw] max-w-[350px] h-[60vw] max-h-[350px] bg-cyan-100/40 rounded-full blur-[80px] pointer-events-none"></div>
@@ -285,10 +347,13 @@ export default function App() {
     );
 
     // ==========================================
-    // LANDING PAGE (LOGIN SCREEN)
+    // 3. LANDING PAGE (Jika belum login)
     // ==========================================
     if (!user) return (
-        <div className="bg-[#F2F2F7] min-h-screen flex items-center justify-center font-sans text-[#1C1C1E] selection:bg-blue-200 antialiased relative overflow-hidden sm:py-10">
+        <div className="bg-[#F2F2F7] fixed inset-0 w-full h-full flex items-center justify-center font-sans text-[#1C1C1E] selection:bg-blue-200 antialiased overflow-hidden sm:py-10">
+            <style dangerouslySetInnerHTML={{ __html: globalCss }} />
+
+            {/* Toast Khusus Landing Page */}
             <div className={`absolute top-10 left-1/2 -translate-x-1/2 z-[60] transition-all duration-500 ${toast.show ? 'opacity-100 scale-100' : 'opacity-0 scale-95 pointer-events-none'}`}>
                 <div className="bg-red-50 px-5 py-3 rounded-xl shadow-lg border border-red-200 flex items-center gap-3">
                     <span className="text-xl">⚠️</span>
@@ -296,26 +361,12 @@ export default function App() {
                 </div>
             </div>
 
-            <style dangerouslySetInnerHTML={{ __html: `
-                @keyframes float1 { 0%, 100% { transform: translateY(0px) scale(1); } 50% { transform: translateY(-12px) scale(1.05); } }
-                @keyframes float2 { 0%, 100% { transform: translateY(0px) scale(1); } 50% { transform: translateY(-8px) scale(1.08); } }
-                @keyframes float3 { 0%, 100% { transform: translateY(0px) scale(1); } 50% { transform: translateY(-15px) scale(0.95); } }
-                @keyframes fillup { 0% { height: 0%; opacity: 0; } 5% { opacity: 1; } 100% { height: 60%; opacity: 1; } }
-                .bubble-1 { animation: float1 4s ease-in-out infinite; }
-                .bubble-2 { animation: float2 5s ease-in-out infinite 0.8s; }
-                .bubble-3 { animation: float3 3.5s ease-in-out infinite 1.5s; }
-                .water-fill { animation: fillup 1.5s cubic-bezier(0.2, 0.8, 0.2, 1) forwards; }
-            `}} />
-
             <main className="bg-white w-full h-[100dvh] sm:h-[844px] sm:max-w-[390px] sm:rounded-[3rem] overflow-hidden flex flex-col relative sm:shadow-2xl sm:ring-1 sm:ring-black/5 mx-auto">
-                
                 <div className="absolute top-[-5%] right-[-10%] w-[80vw] max-w-[400px] h-[80vw] max-h-[400px] bg-blue-100/40 rounded-full blur-[80px] pointer-events-none"></div>
                 <div className="absolute bottom-[10%] left-[-10%] w-[60vw] max-w-[350px] h-[60vw] max-h-[350px] bg-cyan-100/40 rounded-full blur-[80px] pointer-events-none"></div>
 
                 <div className="z-10 w-full h-full flex flex-col items-center py-10 px-8 relative">
-
                     <div className="flex-1 flex flex-col items-center justify-center gap-8 w-full mt-4">
-                        
                         <div className="relative flex justify-center items-end w-full h-[240px]">
                             <div className="bubble-1 absolute left-[10%] bottom-[50%] w-10 h-10 bg-gradient-to-br from-[#5AC8FA] to-[#007AFF] rounded-full shadow-lg shadow-blue-200/50 flex items-center justify-center">
                                 <span className="text-sm">💧</span>
@@ -377,17 +428,11 @@ export default function App() {
     );
 
     // ==========================================
-    // MAIN APP SCREEN (LOGGED IN)
+    // 4. MAIN APP SCREEN (Sudah Logged In & Load Data)
     // ==========================================
     return (
-        <div className="bg-[#F2F2F7] min-h-screen flex items-center justify-center font-sans text-[#1C1C1E] selection:bg-blue-200 antialiased relative overflow-hidden sm:py-10">
-            <style dangerouslySetInnerHTML={{ __html: `
-                * { -webkit-tap-highlight-color: transparent; user-select: none; } 
-                .no-scrollbar::-webkit-scrollbar { display: none; }
-                input[type="number"]::-webkit-inner-spin-button,
-                input[type="number"]::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
-                input[type="number"] { -moz-appearance: textfield; }
-            `}} />
+        <div className="bg-[#F2F2F7] fixed inset-0 w-full h-full flex items-center justify-center font-sans text-[#1C1C1E] selection:bg-blue-200 antialiased overflow-hidden sm:py-10">
+            <style dangerouslySetInnerHTML={{ __html: globalCss }} />
 
             <main className="bg-white w-full h-[100dvh] sm:h-[844px] sm:max-w-[390px] sm:rounded-[3rem] overflow-hidden flex flex-col relative sm:shadow-2xl sm:ring-1 sm:ring-black/5 mx-auto">
                 
