@@ -65,7 +65,10 @@ export default function App() {
     useEffect(() => {
         const unsubscribe = onAuthStateChanged(auth, (u) => {
             setUser(u);
-            setLoading(false);
+            // Tambahkan sedikit minimum delay untuk splash screen effect (opsional, biar transisi lebih smooth)
+            setTimeout(() => {
+                setLoading(false);
+            }, 600);
         });
         return () => unsubscribe();
     }, []);
@@ -116,11 +119,9 @@ export default function App() {
     // --- ACTIONS ---
     const handleLogin = async () => {
         try {
-            // Gunakan Popup, ini yang paling didukung oleh iOS PWA terbaru
             await signInWithPopup(auth, new GoogleAuthProvider());
         } catch (error) {
             console.error("Login Error:", error);
-            // Tampilkan pesan error di layar jika Safari memblokir popup
             showToastMsg("Gagal login: " + error.message, false);
         }
     };
@@ -263,9 +264,23 @@ export default function App() {
     };
 
     // --- RENDERING ---
+    
+    // ==========================================
+    // SPLASH SCREEN (PENGGANTI SPINNER BIRU)
+    // ==========================================
     if (loading) return (
-        <div className="min-h-screen bg-[#F2F2F7] flex items-center justify-center">
-            <div className="w-8 h-8 border-4 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
+        <div className="bg-[#F2F2F7] min-h-screen flex items-center justify-center font-sans text-[#1C1C1E] antialiased sm:py-10">
+            <main className="bg-white w-full h-[100dvh] sm:h-[844px] sm:max-w-[390px] sm:rounded-[3rem] flex flex-col items-center justify-center relative sm:shadow-2xl overflow-hidden">
+                <div className="absolute top-[-5%] right-[-10%] w-[80vw] max-w-[400px] h-[80vw] max-h-[400px] bg-blue-100/40 rounded-full blur-[80px] pointer-events-none"></div>
+                <div className="absolute bottom-[10%] left-[-10%] w-[60vw] max-w-[350px] h-[60vw] max-h-[350px] bg-cyan-100/40 rounded-full blur-[80px] pointer-events-none"></div>
+                
+                {/* Logo Animasi Denyut (Pulse) */}
+                <div className="w-24 h-24 bg-gradient-to-br from-[#5AC8FA] to-[#007AFF] rounded-[2rem] flex items-center justify-center shadow-[0_10px_30px_rgba(0,122,255,0.3)] animate-pulse z-10 mb-6">
+                    <span className="text-4xl relative top-0.5">💧</span>
+                </div>
+                <h1 className="text-2xl font-black tracking-tight text-[#1C1C1E] z-10">Silit Tracker</h1>
+                <p className="text-[#8E8E93] text-sm font-medium z-10 mt-1">Fetching your hydration...</p>
+            </main>
         </div>
     );
 
@@ -274,7 +289,6 @@ export default function App() {
     // ==========================================
     if (!user) return (
         <div className="bg-[#F2F2F7] min-h-screen flex items-center justify-center font-sans text-[#1C1C1E] selection:bg-blue-200 antialiased relative overflow-hidden sm:py-10">
-            {/* TOAST KHUSUS UNTUK ERROR LOGIN */}
             <div className={`absolute top-10 left-1/2 -translate-x-1/2 z-[60] transition-all duration-500 ${toast.show ? 'opacity-100 scale-100' : 'opacity-0 scale-95 pointer-events-none'}`}>
                 <div className="bg-red-50 px-5 py-3 rounded-xl shadow-lg border border-red-200 flex items-center gap-3">
                     <span className="text-xl">⚠️</span>
