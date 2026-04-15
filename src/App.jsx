@@ -35,7 +35,7 @@ export default function App() {
     // --- STATE ---
     const [user, setUser] = useState(null);
     
-    // State baru untuk mengatur alur loading agar tidak salah tempat
+    // State alur loading
     const [authResolved, setAuthResolved] = useState(false);
     const [dataLoaded, setDataLoaded] = useState(false);
     const [isManualLoggingIn, setIsManualLoggingIn] = useState(false);
@@ -70,7 +70,7 @@ export default function App() {
     useEffect(() => {
         const unsubscribe = onAuthStateChanged(auth, (u) => {
             setUser(u);
-            setAuthResolved(true); // Menandakan bahwa pengecekan awal auth sudah selesai
+            setAuthResolved(true); // Pengecekan auth awal selesai
         });
         return () => unsubscribe();
     }, []);
@@ -101,7 +101,6 @@ export default function App() {
                 setUserData(initialData);
             }
             
-            // Jeda sedikit agar layar Splash tidak berkedip terlalu cepat
             setTimeout(() => {
                 setDataLoaded(true);
                 setIsManualLoggingIn(false);
@@ -132,12 +131,12 @@ export default function App() {
 
     // --- ACTIONS ---
     const handleLogin = async () => {
-        setIsManualLoggingIn(true); // Panggil Splash Screen
+        setIsManualLoggingIn(true);
         try {
             await signInWithPopup(auth, new GoogleAuthProvider());
         } catch (error) {
             console.error("Login Error:", error);
-            setIsManualLoggingIn(false); // Matikan Splash Screen jika gagal/batal
+            setIsManualLoggingIn(false);
             showToastMsg("Gagal login: " + error.message, false);
         }
     };
@@ -279,17 +278,20 @@ export default function App() {
         return [...blanks, ...days];
     };
 
-    // --- GLOBAL CSS INJECTION UNTUK ANTI-BOUNCE ---
+    // --- GLOBAL CSS INJECTION UNTUK ANTI-BOUNCE YANG AMAN ---
     const globalCss = `
+        /* Safari Safe Anti-Bounce */
         html, body {
-            overflow: hidden !important;
-            position: fixed !important;
-            width: 100% !important;
-            height: 100% !important;
-            overscroll-behavior: none !important;
-            touch-action: none;
+            overflow: hidden;
+            overscroll-behavior: none;
+            background-color: #FFFFFF;
             margin: 0;
             padding: 0;
+        }
+        @media (min-width: 640px) {
+            html, body {
+                background-color: #F2F2F7;
+            }
         }
         #root {
             width: 100%;
@@ -318,11 +320,15 @@ export default function App() {
     `;
 
     // ==========================================
-    // 1. TAHAP PENGECEKAN AUTH AWAL (Layar Kosong agar tidak flashing)
+    // 1. TAHAP PENGECEKAN AUTH AWAL (MINI SPLASH)
     // ==========================================
+    // Supaya tidak blank putih saat Safari memuat, kita tampilkan logo kecil
     if (!authResolved) return (
-        <div className="bg-[#F2F2F7] fixed inset-0 w-full h-full z-50">
+        <div className="bg-white sm:bg-[#F2F2F7] fixed inset-0 w-full h-full flex items-center justify-center z-50">
             <style dangerouslySetInnerHTML={{ __html: globalCss }} />
+            <div className="w-16 h-16 bg-gradient-to-br from-[#5AC8FA] to-[#007AFF] rounded-2xl flex items-center justify-center shadow-lg animate-pulse">
+                <span className="text-2xl relative top-0.5">💧</span>
+            </div>
         </div>
     );
 
@@ -330,13 +336,12 @@ export default function App() {
     // 2. SPLASH SCREEN (Muncul saat login MANUAL ATAU memuat data dari Firebase)
     // ==========================================
     if (isManualLoggingIn || (user && !dataLoaded)) return (
-        <div className="bg-[#F2F2F7] fixed inset-0 w-full h-full flex items-center justify-center font-sans text-[#1C1C1E] antialiased z-50">
+        <div className="bg-white sm:bg-[#F2F2F7] fixed inset-0 w-full h-full flex items-center justify-center font-sans text-[#1C1C1E] antialiased z-50">
             <style dangerouslySetInnerHTML={{ __html: globalCss }} />
-            <main className="bg-white w-full h-[100dvh] sm:h-[844px] sm:max-w-[390px] sm:rounded-[3rem] flex flex-col items-center justify-center relative sm:shadow-2xl overflow-hidden">
+            <main className="bg-white w-full h-full sm:h-[844px] sm:max-w-[390px] sm:rounded-[3rem] flex flex-col items-center justify-center relative sm:shadow-2xl overflow-hidden">
                 <div className="absolute top-[-5%] right-[-10%] w-[80vw] max-w-[400px] h-[80vw] max-h-[400px] bg-blue-100/40 rounded-full blur-[80px] pointer-events-none"></div>
                 <div className="absolute bottom-[10%] left-[-10%] w-[60vw] max-w-[350px] h-[60vw] max-h-[350px] bg-cyan-100/40 rounded-full blur-[80px] pointer-events-none"></div>
                 
-                {/* Logo Animasi Denyut (Pulse) */}
                 <div className="w-24 h-24 bg-gradient-to-br from-[#5AC8FA] to-[#007AFF] rounded-[2rem] flex items-center justify-center shadow-[0_10px_30px_rgba(0,122,255,0.3)] animate-pulse z-10 mb-6">
                     <span className="text-4xl relative top-0.5">💧</span>
                 </div>
@@ -350,7 +355,7 @@ export default function App() {
     // 3. LANDING PAGE (Jika belum login)
     // ==========================================
     if (!user) return (
-        <div className="bg-[#F2F2F7] fixed inset-0 w-full h-full flex items-center justify-center font-sans text-[#1C1C1E] selection:bg-blue-200 antialiased overflow-hidden sm:py-10">
+        <div className="bg-white sm:bg-[#F2F2F7] fixed inset-0 w-full h-full flex items-center justify-center font-sans text-[#1C1C1E] selection:bg-blue-200 antialiased overflow-hidden sm:py-10">
             <style dangerouslySetInnerHTML={{ __html: globalCss }} />
 
             {/* Toast Khusus Landing Page */}
@@ -361,7 +366,7 @@ export default function App() {
                 </div>
             </div>
 
-            <main className="bg-white w-full h-[100dvh] sm:h-[844px] sm:max-w-[390px] sm:rounded-[3rem] overflow-hidden flex flex-col relative sm:shadow-2xl sm:ring-1 sm:ring-black/5 mx-auto">
+            <main className="bg-white w-full h-full sm:h-[844px] sm:max-w-[390px] sm:rounded-[3rem] overflow-hidden flex flex-col relative sm:shadow-2xl sm:ring-1 sm:ring-black/5 mx-auto">
                 <div className="absolute top-[-5%] right-[-10%] w-[80vw] max-w-[400px] h-[80vw] max-h-[400px] bg-blue-100/40 rounded-full blur-[80px] pointer-events-none"></div>
                 <div className="absolute bottom-[10%] left-[-10%] w-[60vw] max-w-[350px] h-[60vw] max-h-[350px] bg-cyan-100/40 rounded-full blur-[80px] pointer-events-none"></div>
 
@@ -431,10 +436,10 @@ export default function App() {
     // 4. MAIN APP SCREEN (Sudah Logged In & Load Data)
     // ==========================================
     return (
-        <div className="bg-[#F2F2F7] fixed inset-0 w-full h-full flex items-center justify-center font-sans text-[#1C1C1E] selection:bg-blue-200 antialiased overflow-hidden sm:py-10">
+        <div className="bg-white sm:bg-[#F2F2F7] fixed inset-0 w-full h-full flex items-center justify-center font-sans text-[#1C1C1E] selection:bg-blue-200 antialiased overflow-hidden sm:py-10">
             <style dangerouslySetInnerHTML={{ __html: globalCss }} />
 
-            <main className="bg-white w-full h-[100dvh] sm:h-[844px] sm:max-w-[390px] sm:rounded-[3rem] overflow-hidden flex flex-col relative sm:shadow-2xl sm:ring-1 sm:ring-black/5 mx-auto">
+            <main className="bg-white w-full h-full sm:h-[844px] sm:max-w-[390px] sm:rounded-[3rem] overflow-hidden flex flex-col relative sm:shadow-2xl sm:ring-1 sm:ring-black/5 mx-auto">
                 
                 {/* TOAST */}
                 <div className={`absolute left-1/2 -translate-x-1/2 z-[60] transition-all duration-500 ease-[cubic-bezier(0.2,0.8,0.2,1)] ${toast.show ? 'bottom-[120px] opacity-100 scale-100' : 'bottom-16 opacity-0 scale-95 pointer-events-none'}`}>
