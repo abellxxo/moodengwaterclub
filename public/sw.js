@@ -1,12 +1,9 @@
 // ============================================================
 // SERVICE WORKER — Water Tracker PWA
 // Handles both caching AND push notifications
-// Bump CACHE_NAME version string every time you deploy a
-// breaking change so old caches are automatically cleared.
 // ============================================================
-const CACHE_NAME = 'water-tracker-v8';
+const CACHE_NAME = 'water-tracker-v9';
 
-// Assets to download & cache immediately on first install
 const PRECACHE_ASSETS = [
   '/',
   '/index.html',
@@ -19,36 +16,37 @@ const PRECACHE_ASSETS = [
 ];
 
 // ----------------------------------------------------------
-// FIREBASE MESSAGING (Push Notifications)
+// PUSH NOTIFICATIONS (raw Web Push — works on iOS + Android)
 // ----------------------------------------------------------
-importScripts('https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js');
-importScripts('https://www.gstatic.com/firebasejs/10.12.0/firebase-messaging-compat.js');
+self.addEventListener('push', (event) => {
+  console.log('[sw.js] Push event received:', event);
 
-firebase.initializeApp({
-  apiKey: 'AIzaSyAt7roNCIyeOKjNHx7lZXJ3DFULmCak1uw',
-  authDomain: 'water-tracker-kita.firebaseapp.com',
-  projectId: 'water-tracker-kita',
-  storageBucket: 'water-tracker-kita.firebasestorage.app',
-  messagingSenderId: '1065083698538',
-  appId: '1:1065083698538:web:0198badb0d75388e4db913'
-});
-
-const messaging = firebase.messaging();
-
-// Handle background push notifications
-messaging.onBackgroundMessage((payload) => {
-  console.log('[sw.js] Background message received:', payload);
-
-  const notificationTitle = payload.notification?.title || '💧 Water Reminder';
-  const notificationOptions = {
-    body: payload.notification?.body || 'Jangan lupa minum air ya!',
+  let title = '💧 Water Reminder';
+  let options = {
+    body: 'Jangan lupa minum air ya!',
     icon: '/icon-192.png',
     badge: '/icon-192.png',
     tag: 'water-reminder',
     renotify: true,
   };
 
-  self.registration.showNotification(notificationTitle, notificationOptions);
+  if (event.data) {
+    try {
+      const payload = event.data.json();
+      title = payload.notification?.title || title;
+      options.body = payload.notification?.body || options.body;
+      if (payload.notification?.image) {
+        options.image = payload.notification.image;
+      }
+    } catch (e) {
+      // If not JSON, use as text
+      options.body = event.data.text() || options.body;
+    }
+  }
+
+  event.waitUntil(
+    self.registration.showNotification(title, options)
+  );
 });
 
 // Handle notification click — open the app
@@ -57,7 +55,7 @@ self.addEventListener('notificationclick', (event) => {
   event.waitUntil(
     clients.matchAll({ type: 'window', includeUncontrolled: true }).then((clientList) => {
       for (const client of clientList) {
-        if (client.url.includes('/') && 'focus' in client) {
+        if ('focus' in client) {
           return client.focus();
         }
       }
@@ -67,6 +65,29 @@ self.addEventListener('notificationclick', (event) => {
     })
   );
 });
+
+// ----------------------------------------------------------
+// TRY loading Firebase Messaging for additional features
+// (may fail silently on iOS — that's OK, raw push above handles it)
+// ----------------------------------------------------------
+try {
+  importScripts('https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js');
+  importScripts('https://www.gstatic.com/firebasejs/10.12.0/firebase-messaging-compat.js');
+
+  firebase.initializeApp({
+    apiKey: 'AIzaSyAt7roNCIyeOKjNHx7lZXJ3DFULmCak1uw',
+    authDomain: 'water-tracker-kita.firebaseapp.com',
+    projectId: 'water-tracker-kita',
+    storageBucket: 'water-tracker-kita.firebasestorage.app',
+    messagingSenderId: '1065083698538',
+    appId: '1:1065083698538:web:0198badb0d75388e4db913'
+  });
+
+  firebase.messaging();
+  console.log('[sw.js] Firebase Messaging initialized');
+} catch (err) {
+  console.log('[sw.js] Firebase Messaging not available, using raw push only:', err.message);
+}
 
 // ----------------------------------------------------------
 // INSTALL — pre-cache all static assets
@@ -103,10 +124,8 @@ self.addEventListener('fetch', (event) => {
   const { request } = event;
   const url = new URL(request.url);
 
-  // Skip non-same-origin requests (Firebase, Google APIs, etc.)
   if (url.origin !== location.origin) return;
 
-  // STRATEGY 1: Network First for HTML navigation
   if (request.mode === 'navigate') {
     event.respondWith(
       fetch(request)
@@ -120,11 +139,9 @@ self.addEventListener('fetch', (event) => {
     return;
   }
 
-  // STRATEGY 2: Cache First for everything else
   event.respondWith(
     caches.match(request).then((cached) => {
       if (cached) return cached;
-
       return fetch(request).then((res) => {
         if (res && res.ok) {
           const clone = res.clone();
