@@ -155,14 +155,7 @@ export default function App() {
     const handleLogin = async () => {
         setIsManualLoggingIn(true);
         try {
-            const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
-            const isStandalone = window.navigator.standalone === true || window.matchMedia('(display-mode: standalone)').matches;
-            if (isIOS && isStandalone) {
-                // iOS PWA blocks popups — use redirect flow instead
-                await signInWithRedirect(auth, new GoogleAuthProvider());
-            } else {
-                await signInWithPopup(auth, new GoogleAuthProvider());
-            }
+            await signInWithPopup(auth, new GoogleAuthProvider());
         } catch (error) {
             console.error("Login Error:", error);
             setIsManualLoggingIn(false);
