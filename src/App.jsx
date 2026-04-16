@@ -3,8 +3,6 @@ import { initializeApp } from 'firebase/app';
 import {
     getAuth,
     signInWithPopup,
-    signInWithRedirect,
-    getRedirectResult,
     GoogleAuthProvider,
     onAuthStateChanged,
     signOut
@@ -77,14 +75,6 @@ export default function App() {
             setAuthResolved(true);
         });
         return () => unsubscribe();
-    }, []);
-
-    // --- HANDLE REDIRECT RESULT (for iOS PWA login) ---
-    useEffect(() => {
-        getRedirectResult(auth).catch((error) => {
-            console.error("Redirect login error:", error);
-            setIsManualLoggingIn(false);
-        });
     }, []);
 
     // --- FIRESTORE SYNC ---
