@@ -1,6 +1,7 @@
 import { initializeApp } from 'firebase/app';
 import { getAuth } from 'firebase/auth';
 import { getFirestore } from 'firebase/firestore';
+import { getMessaging, getToken, onMessage } from 'firebase/messaging';
 
 const firebaseConfig = {
     apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
@@ -16,3 +17,13 @@ const app = initializeApp(firebaseConfig);
 export const auth = getAuth(app);
 export const db = getFirestore(app);
 export const APP_ID = 'water-tracker-kita';
+
+// --- Firebase Cloud Messaging ---
+let messaging = null;
+try {
+    messaging = getMessaging(app);
+} catch (err) {
+    console.log('FCM not supported in this browser:', err);
+}
+
+export { messaging, getToken, onMessage };

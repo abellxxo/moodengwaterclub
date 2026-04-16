@@ -3,7 +3,7 @@
 // Bump CACHE_NAME version string every time you deploy a
 // breaking change so old caches are automatically cleared.
 // ============================================================
-const CACHE_NAME = 'water-tracker-v6';
+const CACHE_NAME = 'water-tracker-v7';
 
 // Assets to download & cache immediately on first install
 const PRECACHE_ASSETS = [

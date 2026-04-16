@@ -11,7 +11,7 @@ import {
     updateDoc,
     onSnapshot
 } from 'firebase/firestore';
-import { auth, db, APP_ID } from './firebase';
+import { auth, db, APP_ID, messaging, getToken, onMessage } from './firebase';
 
 // --- LOGICAL DATE HELPER ---
 export const getLogicalDateStr = () => {
@@ -60,6 +60,49 @@ export function useAppState() {
         });
         return () => unsubscribe();
     }, []);
+
+    // --- PUSH NOTIFICATION SETUP ---
+    useEffect(() => {
+        if (!user || !messaging) return;
+
+        const setupPushNotifications = async () => {
+            try {
+                // Request permission
+                const permission = await Notification.requestPermission();
+                if (permission !== 'granted') {
+                    console.log('Notification permission denied');
+                    return;
+                }
+
+                // Get FCM token
+                const currentToken = await getToken(messaging, {
+                    vapidKey: import.meta.env.VITE_FIREBASE_VAPID_KEY,
+                    serviceWorkerRegistration: await navigator.serviceWorker.register('/firebase-messaging-sw.js')
+                });
+
+                if (currentToken) {
+                    console.log('FCM Token:', currentToken);
+                    // Save token to Firestore
+                    const tokenDocRef = doc(db, 'artifacts', APP_ID, 'users', user.uid, 'data', 'fcmToken');
+                    await setDoc(tokenDocRef, { token: currentToken, updatedAt: new Date().toISOString() }, { merge: true });
+                }
+            } catch (err) {
+                console.error('Push notification setup failed:', err);
+            }
+        };
+
+        setupPushNotifications();
+
+        // Handle foreground messages
+        const unsubscribeMsg = onMessage(messaging, (payload) => {
+            console.log('Foreground message:', payload);
+            const title = payload.notification?.title || 'Water Reminder';
+            const body = payload.notification?.body || '';
+            showToastMsg(`${title}: ${body}`, true);
+        });
+
+        return () => unsubscribeMsg();
+    }, [user]);
 
     // --- FIRESTORE SYNC ---
     useEffect(() => {
