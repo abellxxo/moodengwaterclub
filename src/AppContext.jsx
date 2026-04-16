@@ -117,6 +117,23 @@ export function useAppState() {
         return () => { if (toastTimeoutRef.current) clearTimeout(toastTimeoutRef.current); };
     }, []);
 
+    // --- DYNAMIC PWA THEME COLOR ---
+    useEffect(() => {
+        const metaThemeColor = document.getElementById('theme-color-meta');
+        if (metaThemeColor) {
+            // Jika sedag loading (splash), atau login, warnanya putih (#FFFFFF)
+            // Jika tidak login, di landing page pakainya pink (#FDE8ED)
+            // Jika login dan masuk app (home/streak), putih (#FFFFFF)
+            if (!authResolved || isManualLoggingIn || (user && !dataLoaded)) {
+                metaThemeColor.setAttribute("content", "#FFFFFF");
+            } else if (!user) {
+                metaThemeColor.setAttribute("content", "#FDE8ED");
+            } else {
+                metaThemeColor.setAttribute("content", "#FFFFFF");
+            }
+        }
+    }, [user, authResolved, dataLoaded, isManualLoggingIn]);
+
     // --- TOAST HELPER ---
     const showToastMsg = (message, isSuccess = true) => {
         if (toastTimeoutRef.current) clearTimeout(toastTimeoutRef.current);
