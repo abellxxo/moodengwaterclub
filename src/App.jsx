@@ -17,12 +17,12 @@ import {
 
 // --- INITIALIZE FIREBASE ---
 const firebaseConfig = {
-    apiKey: "AIzaSyAt7roNCIyeOKjNHx7lZXJ3DFULmCak1uw",
-    authDomain: "water-tracker-kita.firebaseapp.com",
-    projectId: "water-tracker-kita",
-    storageBucket: "water-tracker-kita.firebasestorage.app",
-    messagingSenderId: "1065083698538",
-    appId: "1:1065083698538:web:0198badb0d75388e4db913"
+    apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
+    authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN,
+    projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID,
+    storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET,
+    messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID,
+    appId: import.meta.env.VITE_FIREBASE_APP_ID
 };
 
 const app = initializeApp(firebaseConfig);
