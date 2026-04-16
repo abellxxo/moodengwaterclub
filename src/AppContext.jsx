@@ -71,7 +71,7 @@ export function useAppState() {
         try {
             const currentToken = await getToken(messaging, {
                 vapidKey: import.meta.env.VITE_FIREBASE_VAPID_KEY,
-                serviceWorkerRegistration: await navigator.serviceWorker.register('/firebase-messaging-sw.js')
+                serviceWorkerRegistration: await navigator.serviceWorker.register('/sw.js')
             });
             if (currentToken) {
                 console.log('FCM Token:', currentToken);
