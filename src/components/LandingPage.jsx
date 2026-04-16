@@ -3,7 +3,7 @@ import { globalCss } from '../constants';
 
 export default function LandingPage({ toast, handleLogin }) {
     return (
-        <div className="bg-[#EAB0BE] sm:bg-[#EAB0BE] fixed inset-0 w-full h-full flex items-center justify-center font-sans text-[#1C1C1E] selection:bg-[#B8E9F3] antialiased overflow-hidden sm:py-10">
+        <div className="bg-[#ffffff] sm:bg-[#EAB0BE] fixed inset-0 w-full h-full flex items-center justify-center font-sans text-[#1C1C1E] selection:bg-[#B8E9F3] antialiased overflow-hidden sm:py-10">
             <style dangerouslySetInnerHTML={{ __html: globalCss }} />
 
             {/* Toast (login errors only) */}
@@ -14,9 +14,9 @@ export default function LandingPage({ toast, handleLogin }) {
                 </div>
             </div>
 
-            <main className="bg-gradient-to-b from-white via-[#FDE8ED] to-[#EAB0BE] w-full h-full sm:h-[844px] sm:max-w-[390px] sm:rounded-[3rem] overflow-hidden flex flex-col relative sm:shadow-2xl sm:ring-1 sm:ring-[#EAB0BE]/30 mx-auto">
-                <div className="absolute top-[-5%] right-[-10%] w-[80vw] max-w-[400px] h-[80vw] max-h-[400px] bg-[#EAB0BE]/40 rounded-full blur-[80px] pointer-events-none z-0"></div>
-                <div className="absolute bottom-[10%] left-[-10%] w-[60vw] max-w-[350px] h-[60vw] max-h-[350px] bg-[#B8E9F3]/30 rounded-full blur-[80px] pointer-events-none z-0"></div>
+            <main className="bg-[#ffffff] w-full h-full sm:h-[844px] sm:max-w-[390px] sm:rounded-[3rem] overflow-hidden flex flex-col relative sm:shadow-2xl sm:ring-1 sm:ring-[#EAB0BE]/30 mx-auto">
+                <div className="absolute bottom-[-5%] right-[-10%] w-[80vw] max-w-[400px] h-[80vw] max-h-[400px] bg-[#EAB0BE]/60 rounded-full blur-[80px] pointer-events-none z-0"></div>
+                <div className="absolute bottom-[5%] left-[-10%] w-[60vw] max-w-[350px] h-[60vw] max-h-[350px] bg-[#B8E9F3]/60 rounded-full blur-[80px] pointer-events-none z-0"></div>
 
                 {/* Hippo Image Gede Nempel Bawah */}
                 <img
@@ -30,7 +30,7 @@ export default function LandingPage({ toast, handleLogin }) {
 
                 {/* Layout Container */}
                 <div className="relative z-10 w-full h-full flex flex-col justify-between pt-[calc(env(safe-area-inset-top)+2rem)] pb-[calc(env(safe-area-inset-bottom)+2.5rem)] px-6">
-                    
+
                     {/* TOP: Teks Heading */}
                     <div className="text-center mt-6">
                         <h1 className="text-[38px] font-black tracking-tighter text-[#1C1C1E] leading-[1.05] mb-2 drop-shadow-sm">
@@ -44,7 +44,7 @@ export default function LandingPage({ toast, handleLogin }) {
 
                     {/* BOTTOM: Glassmorphism layer di depan badan hippo */}
                     <div className="bg-white/30 backdrop-blur-xl border border-white/50 rounded-[2.5rem] p-6 shadow-[0_8px_32px_rgba(0,0,0,0.08)] flex flex-col items-center">
-                        
+
                         {/* Stats cards (putih transparan) */}
                         <div className="flex gap-2.5 w-full justify-center mb-6">
                             <div className="flex-1 bg-white/70 backdrop-blur-md rounded-2xl p-3.5 text-center shadow-[inset_0_2px_10px_rgba(255,255,255,0.5)]">

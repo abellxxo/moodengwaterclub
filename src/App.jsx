@@ -23,10 +23,12 @@ export default function App() {
 
     // 4. Logged in → main app
     return (
-        <div className="bg-white sm:bg-[#F2F2F7] fixed inset-0 w-full h-full flex items-center justify-center font-sans text-[#1C1C1E] selection:bg-[#B8E9F3] antialiased overflow-hidden sm:py-10">
+        <div className="bg-[#ffffff] sm:bg-[#EAB0BE] fixed inset-0 w-full h-full flex items-center justify-center font-sans text-[#1C1C1E] selection:bg-[#B8E9F3] antialiased overflow-hidden sm:py-10">
             <style dangerouslySetInnerHTML={{ __html: globalCss }} />
 
-            <main className="bg-white w-full h-full sm:h-[844px] sm:max-w-[390px] sm:rounded-[3rem] overflow-hidden flex flex-col relative sm:shadow-2xl sm:ring-1 sm:ring-black/5 mx-auto">
+            <main className="bg-[#ffffff] w-full h-full sm:h-[844px] sm:max-w-[390px] sm:rounded-[3rem] overflow-hidden flex flex-col relative sm:shadow-2xl sm:ring-1 sm:ring-[#EAB0BE]/30 mx-auto">
+                <div className="absolute bottom-[-5%] right-[-10%] w-[80vw] max-w-[400px] h-[80vw] max-h-[400px] bg-[#EAB0BE]/50 rounded-full blur-[80px] pointer-events-none z-0"></div>
+                <div className="absolute bottom-[5%] left-[-10%] w-[60vw] max-w-[350px] h-[60vw] max-h-[350px] bg-[#B8E9F3]/50 rounded-full blur-[80px] pointer-events-none z-0"></div>
 
                 {/* TOAST */}
                 <div className={`absolute left-1/2 -translate-x-1/2 z-[60] transition-all duration-500 ease-[cubic-bezier(0.2,0.8,0.2,1)] ${s.toast.show ? 'bottom-[120px] opacity-100 scale-100' : 'bottom-16 opacity-0 scale-95 pointer-events-none'}`}>
@@ -119,7 +121,7 @@ export default function App() {
                 </div>
 
                 {/* FLOATING DOCK */}
-                <div className={`absolute bottom-8 left-1/2 -translate-x-1/2 px-6 py-4 bg-white/60 backdrop-blur-3xl border border-white/80 shadow-[0_20px_50px_rgba(0,0,0,0.15)] rounded-[4rem] z-40 flex justify-center items-center gap-7 transition-all duration-500 ease-in-out ${s.currentView === 'home' ? 'translate-y-0 opacity-100' : 'translate-y-40 opacity-0 pointer-events-none'}`}>
+                <div className={`absolute bottom-8 left-1/2 -translate-x-1/2 px-6 py-4 bg-white/30 backdrop-blur-xl border border-white/50 shadow-[0_8px_32px_rgba(0,0,0,0.08)] rounded-[2.5rem] z-40 flex justify-center items-center gap-7 transition-all duration-500 ease-in-out ${s.currentView === 'home' ? 'translate-y-0 opacity-100' : 'translate-y-40 opacity-0 pointer-events-none'}`}>
                     <button
                         onClick={() => s.updateWater(-200)}
                         disabled={s.isUpdating}
