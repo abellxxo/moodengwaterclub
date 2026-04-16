@@ -61,37 +61,55 @@ export function useAppState() {
         return () => unsubscribe();
     }, []);
 
-    // --- PUSH NOTIFICATION SETUP ---
+    // --- PUSH NOTIFICATION ---
+    const [notifPermission, setNotifPermission] = useState(
+        typeof Notification !== 'undefined' ? Notification.permission : 'default'
+    );
+
+    const registerFCMToken = async () => {
+        if (!user || !messaging) return;
+        try {
+            const currentToken = await getToken(messaging, {
+                vapidKey: import.meta.env.VITE_FIREBASE_VAPID_KEY,
+                serviceWorkerRegistration: await navigator.serviceWorker.register('/firebase-messaging-sw.js')
+            });
+            if (currentToken) {
+                console.log('FCM Token:', currentToken);
+                const tokenDocRef = doc(db, 'artifacts', APP_ID, 'users', user.uid, 'data', 'fcmToken');
+                await setDoc(tokenDocRef, { token: currentToken, updatedAt: new Date().toISOString() }, { merge: true });
+            }
+        } catch (err) {
+            console.error('FCM token registration failed:', err);
+        }
+    };
+
+    // Called from a button tap (required for iOS)
+    const requestNotificationPermission = async () => {
+        if (!messaging) {
+            showToastMsg('Push notifications not supported', false);
+            return;
+        }
+        try {
+            const permission = await Notification.requestPermission();
+            setNotifPermission(permission);
+            if (permission === 'granted') {
+                await registerFCMToken();
+                showToastMsg('🔔 Notifications enabled!', true);
+            } else {
+                showToastMsg('Notification permission denied', false);
+            }
+        } catch (err) {
+            console.error('Notification permission error:', err);
+            showToastMsg('Failed to enable notifications', false);
+        }
+    };
+
+    // Auto-register if permission already granted (desktop revisit)
     useEffect(() => {
         if (!user || !messaging) return;
-
-        const setupPushNotifications = async () => {
-            try {
-                // Request permission
-                const permission = await Notification.requestPermission();
-                if (permission !== 'granted') {
-                    console.log('Notification permission denied');
-                    return;
-                }
-
-                // Get FCM token
-                const currentToken = await getToken(messaging, {
-                    vapidKey: import.meta.env.VITE_FIREBASE_VAPID_KEY,
-                    serviceWorkerRegistration: await navigator.serviceWorker.register('/firebase-messaging-sw.js')
-                });
-
-                if (currentToken) {
-                    console.log('FCM Token:', currentToken);
-                    // Save token to Firestore
-                    const tokenDocRef = doc(db, 'artifacts', APP_ID, 'users', user.uid, 'data', 'fcmToken');
-                    await setDoc(tokenDocRef, { token: currentToken, updatedAt: new Date().toISOString() }, { merge: true });
-                }
-            } catch (err) {
-                console.error('Push notification setup failed:', err);
-            }
-        };
-
-        setupPushNotifications();
+        if (Notification.permission === 'granted') {
+            registerFCMToken();
+        }
 
         // Handle foreground messages
         const unsubscribeMsg = onMessage(messaging, (payload) => {
@@ -336,5 +354,7 @@ export function useAppState() {
         showRewardModal, setShowRewardModal,
         // Actions
         handleLogin, handleLogout, updateWater, handleCustomSubmit, handleClaimReward, showToastMsg,
+        // Notifications
+        notifPermission, requestNotificationPermission,
     };
 }

@@ -77,20 +77,33 @@ export default function App() {
                                 </span>
                             </p>
                         </div>
-                        <button
-                            onClick={() => s.setCurrentView(prev => prev === 'home' ? 'streak' : 'home')}
-                            className={`w-10 h-10 rounded-full flex items-center justify-center transition-all active:scale-90 ${s.currentView === 'home' ? 'bg-[#6ED8EA]/10 text-[#6ED8EA]' : 'bg-[#F2F2F7] text-[#8E8E93]'}`}
-                        >
-                            {s.currentView === 'home' ? (
-                                <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" viewBox="0 0 24 24" fill="currentColor">
-                                    <path d="M12 21.5C7.58172 21.5 4 17.9183 4 13.5C4 9.61058 8.87326 3.89886 11.2335 1.3412C11.6421 0.898491 12.3579 0.898491 12.7665 1.3412C15.1267 3.89886 20 9.61058 20 13.5C20 17.9183 16.4183 21.5 12 21.5Z" />
-                                </svg>
-                            ) : (
-                                <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5">
-                                    <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
-                                </svg>
+                        <div className="flex items-center gap-2">
+                            {s.notifPermission !== 'granted' && (
+                                <button
+                                    onClick={s.requestNotificationPermission}
+                                    className="w-10 h-10 rounded-full flex items-center justify-center transition-all active:scale-90 bg-[#EAB0BE]/10 text-[#EAB0BE] animate-pulse"
+                                    title="Enable notifications"
+                                >
+                                    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
+                                        <path strokeLinecap="round" strokeLinejoin="round" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
+                                    </svg>
+                                </button>
                             )}
-                        </button>
+                            <button
+                                onClick={() => s.setCurrentView(prev => prev === 'home' ? 'streak' : 'home')}
+                                className={`w-10 h-10 rounded-full flex items-center justify-center transition-all active:scale-90 ${s.currentView === 'home' ? 'bg-[#6ED8EA]/10 text-[#6ED8EA]' : 'bg-[#F2F2F7] text-[#8E8E93]'}`}
+                            >
+                                {s.currentView === 'home' ? (
+                                    <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" viewBox="0 0 24 24" fill="currentColor">
+                                        <path d="M12 21.5C7.58172 21.5 4 17.9183 4 13.5C4 9.61058 8.87326 3.89886 11.2335 1.3412C11.6421 0.898491 12.3579 0.898491 12.7665 1.3412C15.1267 3.89886 20 9.61058 20 13.5C20 17.9183 16.4183 21.5 12 21.5Z" />
+                                    </svg>
+                                ) : (
+                                    <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5">
+                                        <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+                                    </svg>
+                                )}
+                            </button>
+                        </div>
                     </div>
                 </header>
 
