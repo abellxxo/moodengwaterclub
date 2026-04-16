@@ -29,7 +29,7 @@ export default function LandingPage({ toast, handleLogin }) {
 
 
                 {/* Layout Container */}
-                <div className="relative z-10 w-full h-full flex flex-col justify-between pt-16 pb-8 px-6">
+                <div className="relative z-10 w-full h-full flex flex-col justify-between pt-[calc(env(safe-area-inset-top)+2rem)] pb-8 px-6">
                     
                     {/* TOP: Teks Heading */}
                     <div className="text-center mt-6">

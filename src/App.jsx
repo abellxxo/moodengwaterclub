@@ -62,7 +62,7 @@ export default function App() {
                 />
 
                 {/* HEADER */}
-                <header className="pt-12 pb-4 px-8 z-30 bg-white/70 backdrop-blur-xl border-b border-gray-100/50 sticky top-0">
+                <header className="pt-[calc(env(safe-area-inset-top)+1rem)] pb-4 px-8 z-30 bg-white/70 backdrop-blur-xl border-b border-gray-100/50 sticky top-0">
                     <div className="flex justify-between items-center h-14">
                         <div>
                             <h1 className="text-2xl font-bold tracking-tight text-[#1C1C1E]">
