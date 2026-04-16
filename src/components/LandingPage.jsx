@@ -14,7 +14,7 @@ export default function LandingPage({ toast, handleLogin }) {
                 </div>
             </div>
 
-            <main className="bg-gradient-to-b from-[#FDE8ED] via-[#FAF2F4] to-[#FDE8ED] w-full h-full sm:h-[844px] sm:max-w-[390px] sm:rounded-[3rem] overflow-hidden flex flex-col relative sm:shadow-2xl sm:ring-1 sm:ring-[#EAB0BE]/30 mx-auto">
+            <main className="bg-gradient-to-b from-white via-[#FDE8ED] to-[#EAB0BE] w-full h-full sm:h-[844px] sm:max-w-[390px] sm:rounded-[3rem] overflow-hidden flex flex-col relative sm:shadow-2xl sm:ring-1 sm:ring-[#EAB0BE]/30 mx-auto">
                 <div className="absolute top-[-5%] right-[-10%] w-[80vw] max-w-[400px] h-[80vw] max-h-[400px] bg-[#EAB0BE]/40 rounded-full blur-[80px] pointer-events-none z-0"></div>
                 <div className="absolute bottom-[10%] left-[-10%] w-[60vw] max-w-[350px] h-[60vw] max-h-[350px] bg-[#B8E9F3]/30 rounded-full blur-[80px] pointer-events-none z-0"></div>
 

@@ -3,7 +3,7 @@
   "short_name": "Hydrate",
   "description": "Moodeng Waterclub",
   "start_url": "/",
-  "display": "fullscreen",
+  "display": "standalone",
   "background_color": "#F2F2F7",
   "theme_color": "#007AFF",
   "icons": [

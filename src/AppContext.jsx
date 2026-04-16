@@ -1,7 +1,6 @@
 import { useState, useEffect, useRef, useMemo } from 'react';
 import {
-    signInWithRedirect,
-    getRedirectResult,
+    signInWithPopup,
     GoogleAuthProvider,
     onAuthStateChanged,
     signOut
@@ -59,20 +58,6 @@ export function useAppState() {
             setUser(u);
             setAuthResolved(true);
         });
-
-        // Handle redirect result after Google sign-in redirect returns
-        getRedirectResult(auth)
-            .then((result) => {
-                if (result?.user) {
-                    setIsManualLoggingIn(false);
-                }
-            })
-            .catch((error) => {
-                console.error('Redirect result error:', error);
-                setIsManualLoggingIn(false);
-                showToastMsg('Gagal login: ' + error.message, false);
-            });
-
         return () => unsubscribe();
     }, []);
 
@@ -225,7 +210,7 @@ export function useAppState() {
     const handleLogin = async () => {
         setIsManualLoggingIn(true);
         try {
-            await signInWithRedirect(auth, new GoogleAuthProvider());
+            await signInWithPopup(auth, new GoogleAuthProvider());
         } catch (error) {
             console.error('Login Error:', error);
             setIsManualLoggingIn(false);
