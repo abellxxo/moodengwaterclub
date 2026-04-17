@@ -2,7 +2,7 @@
 // SERVICE WORKER — Water Tracker PWA
 // Handles both caching AND push notifications
 // ============================================================
-const CACHE_NAME = 'water-tracker-v10';
+const CACHE_NAME = 'water-tracker-v11';
 
 const PRECACHE_ASSETS = [
   '/',
