@@ -19,3 +19,7 @@ Thumbs.db
 .vscode/*
 !.vscode/extensions.json
 .idea/
+
+# Firebase Service Account Key (DO NOT COMMIT)
+service-account.json
+*.json.key

@@ -69,9 +69,9 @@ export function useAppState() {
     const registerFCMToken = async () => {
         if (!user || !messaging) return;
         try {
-            const currentToken = await getToken(messaging, {
+    const currentToken = await getToken(messaging, {
                 vapidKey: import.meta.env.VITE_FIREBASE_VAPID_KEY,
-                serviceWorkerRegistration: await navigator.serviceWorker.register('/sw.js')
+                serviceWorkerRegistration: await navigator.serviceWorker.register('/firebase-messaging-sw.js')
             });
             if (currentToken) {
                 console.log('FCM Token:', currentToken);

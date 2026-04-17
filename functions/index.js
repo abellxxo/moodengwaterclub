@@ -1,3 +1,4 @@
+// v2 — force scheduler job creation
 const functions = require("firebase-functions");
 const admin = require("firebase-admin");
 
