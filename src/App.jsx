@@ -68,7 +68,7 @@ export default function App() {
                     <div className="flex justify-between items-center h-14">
                         <div>
                             <h1 className="text-2xl font-bold tracking-tight text-[#1C1C1E]">
-                                {s.currentView === 'home' ? 'Silit Tracker App' : 'Streak'}
+                                {s.currentView === 'home' ? 'Moodeng Water' : 'Streak'}
                             </h1>
                             <p className="text-[#8E8E93] text-[12px] font-medium flex items-center gap-1.5">
                                 {(s.user.displayName?.split(' ')[0] || 'User').substring(0, 10)}'s Tracker
