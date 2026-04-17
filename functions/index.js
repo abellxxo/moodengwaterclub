@@ -1,15 +1,14 @@
-// v2 — force scheduler job creation
+// v3 — fix: use listDocuments() for reliable FCM token fetching
 const functions = require("firebase-functions");
 const admin = require("firebase-admin");
 
 admin.initializeApp();
 
 exports.sendWaterReminders = functions
-  .region("asia-southeast2") // Jakarta / nearest region
+  .region("asia-southeast2")
   .pubsub.schedule("0 8,10,12,14,16,18,20,21 * * *")
   .timeZone("Asia/Jakarta")
   .onRun(async (context) => {
-    // Determine current hour in Jakarta timezone
     const now = new Date(new Date().toLocaleString("en-US", { timeZone: "Asia/Jakarta" }));
     const currentHour = now.getHours();
 
@@ -24,20 +23,23 @@ exports.sendWaterReminders = functions
       notificationBody = "Don't forget to track your daily water before you sleep!";
     }
 
-    // 1. Fetch all FCM tokens from Firestore
-    // Collection path based on AppContext: artifacts/water-tracker-kita/users/{uid}/data/fcmToken
-    const tokens = [];
     try {
+      // Use listDocuments() — works reliably unlike .get() on large collections
       const usersRef = admin.firestore().collection("artifacts").doc("water-tracker-kita").collection("users");
-      const usersSnapshot = await usersRef.get();
+      const userDocs = await usersRef.listDocuments();
+      const tokens = [];
 
-      for (const userDoc of usersSnapshot.docs) {
-        const fcmTokenDoc = await userDoc.ref.collection("data").doc("fcmToken").get();
-        if (fcmTokenDoc.exists) {
-          const tokenData = fcmTokenDoc.data();
-          if (tokenData && tokenData.token) {
-            tokens.push(tokenData.token);
+      for (const userDocRef of userDocs) {
+        try {
+          const fcmTokenDoc = await userDocRef.collection("data").doc("fcmToken").get();
+          if (fcmTokenDoc.exists) {
+            const tokenData = fcmTokenDoc.data();
+            if (tokenData && tokenData.token) {
+              tokens.push(tokenData.token);
+            }
           }
+        } catch (e) {
+          console.log(`Could not read token for ${userDocRef.id}:`, e.message);
         }
       }
 
@@ -48,16 +50,14 @@ exports.sendWaterReminders = functions
 
       console.log(`Sending notification to ${tokens.length} devices.`);
 
-      // 2. Send multicast message
-      const message = {
+      const response = await admin.messaging().sendEachForMulticast({
         notification: {
           title: notificationTitle,
           body: notificationBody,
         },
         tokens: tokens,
-      };
+      });
 
-      const response = await admin.messaging().sendEachForMulticast(message);
       console.log(response.successCount + " messages were sent successfully.");
       if (response.failureCount > 0) {
         console.log(response.failureCount + " messages failed.");

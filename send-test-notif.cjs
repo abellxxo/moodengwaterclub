@@ -41,8 +41,8 @@ async function sendTestNotification() {
 
   const response = await admin.messaging().sendEachForMulticast({
     notification: {
-      title: '💧 Hydration Check!',
-      body: 'Please drink your water Moodeng friend 🦛'
+      title: '🌙 Night Reminder',
+      body: "Don't forget to turn in your daily water today! 💧"
     },
     tokens
   });
