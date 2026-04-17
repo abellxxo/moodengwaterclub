@@ -2,7 +2,7 @@
 // SERVICE WORKER — Water Tracker PWA
 // Handles both caching AND push notifications
 // ============================================================
-const CACHE_NAME = 'water-tracker-v9';
+const CACHE_NAME = 'water-tracker-v10';
 
 const PRECACHE_ASSETS = [
   '/',
@@ -66,28 +66,6 @@ self.addEventListener('notificationclick', (event) => {
   );
 });
 
-// ----------------------------------------------------------
-// TRY loading Firebase Messaging for additional features
-// (may fail silently on iOS — that's OK, raw push above handles it)
-// ----------------------------------------------------------
-try {
-  importScripts('https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js');
-  importScripts('https://www.gstatic.com/firebasejs/10.12.0/firebase-messaging-compat.js');
-
-  firebase.initializeApp({
-    apiKey: 'AIzaSyAt7roNCIyeOKjNHx7lZXJ3DFULmCak1uw',
-    authDomain: 'water-tracker-kita.firebaseapp.com',
-    projectId: 'water-tracker-kita',
-    storageBucket: 'water-tracker-kita.firebasestorage.app',
-    messagingSenderId: '1065083698538',
-    appId: '1:1065083698538:web:0198badb0d75388e4db913'
-  });
-
-  firebase.messaging();
-  console.log('[sw.js] Firebase Messaging initialized');
-} catch (err) {
-  console.log('[sw.js] Firebase Messaging not available, using raw push only:', err.message);
-}
 
 // ----------------------------------------------------------
 // INSTALL — pre-cache all static assets
