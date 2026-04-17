@@ -1,6 +1,5 @@
-// One-time test notification sender
-// Run with: node send-test-notif.js
-
+// Sends test push notification to all users
+process.env.NODE_TLS_REJECT_UNAUTHORIZED = '0'; // Windows SSL fix (local only)
 const admin = require('./functions/node_modules/firebase-admin');
 
 admin.initializeApp({
@@ -13,39 +12,43 @@ async function sendTestNotification() {
   const tokens = [];
 
   console.log('📡 Fetching FCM tokens from Firestore...');
+  
+  // Use listDocuments() instead of get() — more reliable with Admin SDK
   const usersRef = db.collection('artifacts').doc('water-tracker-kita').collection('users');
-  const usersSnapshot = await usersRef.get();
+  const userDocs = await usersRef.listDocuments();
 
-  for (const userDoc of usersSnapshot.docs) {
-    const fcmTokenDoc = await userDoc.ref.collection('data').doc('fcmToken').get();
-    if (fcmTokenDoc.exists) {
-      const tokenData = fcmTokenDoc.data();
-      if (tokenData && tokenData.token) {
-        tokens.push(tokenData.token);
-        console.log(`✅ Found token for user: ${userDoc.id}`);
+  for (const userDocRef of userDocs) {
+    try {
+      const fcmTokenDoc = await userDocRef.collection('data').doc('fcmToken').get();
+      if (fcmTokenDoc.exists) {
+        const tokenData = fcmTokenDoc.data();
+        if (tokenData && tokenData.token) {
+          tokens.push(tokenData.token);
+          console.log(`✅ Token found for user: ${userDocRef.id}`);
+        }
       }
+    } catch (e) {
+      console.log(`⚠️ Could not read token for ${userDocRef.id}:`, e.message);
     }
   }
 
   if (tokens.length === 0) {
-    console.log('❌ No FCM tokens found. Make sure users have enabled notifications in the app!');
+    console.log('❌ No FCM tokens found!');
     process.exit(0);
   }
 
-  console.log(`\n🚀 Sending notification to ${tokens.length} device(s)...\n`);
+  console.log(`\n🚀 Sending to ${tokens.length} device(s)...`);
 
-  const message = {
+  const response = await admin.messaging().sendEachForMulticast({
     notification: {
       title: '💧 Hydration Check!',
       body: 'Please drink your water Moodeng friend 🦛'
     },
-    tokens: tokens
-  };
+    tokens
+  });
 
-  const response = await admin.messaging().sendEachForMulticast(message);
-  console.log(`✅ Success: ${response.successCount} sent`);
+  console.log(`✅ Sent: ${response.successCount} | ❌ Failed: ${response.failureCount}`);
   if (response.failureCount > 0) {
-    console.log(`❌ Failed: ${response.failureCount}`);
     response.responses.forEach((r, i) => {
       if (!r.success) console.log(`   Token ${i}: ${r.error?.message}`);
     });
@@ -54,7 +57,4 @@ async function sendTestNotification() {
   process.exit(0);
 }
 
-sendTestNotification().catch(err => {
-  console.error('Error:', err);
-  process.exit(1);
-});
+sendTestNotification().catch(err => { console.error('Error:', err); process.exit(1); });

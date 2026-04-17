@@ -61,6 +61,22 @@ export function useAppState() {
         return () => unsubscribe();
     }, []);
 
+    // --- CLEANUP OLD SERVICE WORKERS ---
+    // Unregister old sw.js to prevent double notifications
+    useEffect(() => {
+        if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.getRegistrations().then((registrations) => {
+                for (const reg of registrations) {
+                    if (reg.active?.scriptURL?.includes('/sw.js')) {
+                        reg.unregister().then(() => {
+                            console.log('[SW] Unregistered old sw.js');
+                        });
+                    }
+                }
+            });
+        }
+    }, []);
+
     // --- PUSH NOTIFICATION ---
     const [notifPermission, setNotifPermission] = useState(
         typeof Notification !== 'undefined' ? Notification.permission : 'default'
