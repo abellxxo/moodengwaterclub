@@ -64,6 +64,12 @@ export const getUserGroup = async (uid) => {
 };
 
 export const createGroup = async (uid) => {
+    // Safety check: if user already belongs to a group, do NOT create a new one, return it instead.
+    const existingGroup = await getUserGroup(uid);
+    if (existingGroup) {
+        return existingGroup;
+    }
+
     const groupId = generateCode(12);
     const groupRef = doc(db, 'artifacts', APP_ID, 'groups', groupId);
     const groupData = {
