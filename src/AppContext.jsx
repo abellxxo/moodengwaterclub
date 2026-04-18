@@ -12,12 +12,11 @@ import {
     onSnapshot
 } from 'firebase/firestore';
 import { auth, db, APP_ID, messaging, getToken, onMessage } from './firebase';
+import { getLogicalDateStr, calculateStreak } from './streakUtils';
+import { ensureProfile } from './friendsService';
 
-// --- LOGICAL DATE HELPER ---
-export const getLogicalDateStr = () => {
-    const now = new Date();
-    return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
-};
+// Re-export for backward compatibility (canonical source is streakUtils.js)
+export { getLogicalDateStr } from './streakUtils';
 
 // --- MAIN STATE HOOK ---
 export function useAppState() {
@@ -60,6 +59,15 @@ export function useAppState() {
         });
         return () => unsubscribe();
     }, []);
+
+    // --- AUTO-CREATE PROFILE ON LOGIN ---
+    useEffect(() => {
+        if (user) {
+            ensureProfile(user).catch(err => {
+                console.error('Profile creation error:', err);
+            });
+        }
+    }, [user]);
 
     // --- CLEANUP OLD SERVICE WORKERS ---
     // Unregister old sw.js to prevent double notifications
@@ -227,31 +235,9 @@ export function useAppState() {
     const isTodayGoalMet = currentCount >= userData.goal;
     const progress = Math.min((currentCount / userData.goal) * 100, 100);
 
-    // --- STREAK CALC (memoized) ---
+    // --- STREAK CALC (memoized, uses shared utility) ---
     const streakCount = useMemo(() => {
-        let currentStreak = 0;
-        let checkDate = new Date();
-        let safety = 0;
-        const today = getLogicalDateStr();
-
-        while (safety < 180) {
-            safety++;
-            const str = `${checkDate.getFullYear()}-${String(checkDate.getMonth() + 1).padStart(2, '0')}-${String(checkDate.getDate()).padStart(2, '0')}`;
-
-            if (userData.streakResetDate && str <= userData.streakResetDate) break;
-
-            if ((userData.history[str] || 0) >= userData.goal) {
-                currentStreak++;
-                checkDate.setDate(checkDate.getDate() - 1);
-            } else {
-                if (str === today) {
-                    checkDate.setDate(checkDate.getDate() - 1);
-                    continue;
-                }
-                break;
-            }
-        }
-        return currentStreak;
+        return calculateStreak(userData.history, userData.goal, userData.streakResetDate);
     }, [userData.history, userData.goal, userData.streakResetDate]);
 
     // --- WEEK DAYS (memoized) ---

@@ -1,33 +1,26 @@
 import React, { useState, useRef, useEffect, useCallback } from 'react';
+import { useAppState } from '../AppContext';
+import { auth } from '../firebase';
+import {
+    getUserGroup, loadFriendsData, generateInviteLink, getGradientForUid
+} from '../friendsService';
 
-// ── Mock Data ──────────────────────────────────────────────
+// ── Fallback mock data (used if Firestore returns empty, for local testing) ──
 const MOCK_FRIENDS = [
     {
-        id: 'f1',
-        name: 'Sophia',
-        initials: 'SP',
+        id: 'f1', name: 'Sophia', initials: 'SP',
         gradient: ['#F093FB', '#F5576C'],
-        goal: 1500,
-        current: 1500,
-        streak: 12,
+        goal: 1500, current: 1500, streak: 12,
     },
     {
-        id: 'f2',
-        name: 'Marcus',
-        initials: 'MC',
+        id: 'f2', name: 'Marcus', initials: 'MC',
         gradient: ['#43E97B', '#38F9D7'],
-        goal: 2000,
-        current: 1340,
-        streak: 5,
+        goal: 2000, current: 1340, streak: 5,
     },
     {
-        id: 'f3',
-        name: 'Hana',
-        initials: 'HN',
+        id: 'f3', name: 'Hana', initials: 'HN',
         gradient: ['#FA709A', '#FEE140'],
-        goal: 1500,
-        current: 620,
-        streak: 2,
+        goal: 1500, current: 620, streak: 2,
     },
 ];
 
@@ -80,9 +73,27 @@ function StatusPill({ progress, goalMet }) {
 }
 
 // ── Add Friend Sheet ───────────────────────────────────────
-function AddFriendSheet({ show, onClose }) {
+function AddFriendSheet({ show, onClose, user }) {
     const [copied, setCopied] = useState(false);
-    const inviteLink = 'https://moodeng.club/invite/xJ9kQ2';
+    const [inviteLink, setInviteLink] = useState('');
+    const [generating, setGenerating] = useState(false);
+
+    useEffect(() => {
+        if (show && user) {
+            setCopied(false);
+            setGenerating(true);
+            generateInviteLink(user.uid)
+                .then(({ link }) => {
+                    setInviteLink(link);
+                    setGenerating(false);
+                })
+                .catch(err => {
+                    console.error('Failed to generate invite:', err);
+                    setInviteLink('Error generating link');
+                    setGenerating(false);
+                });
+        }
+    }, [show, user]);
 
     const handleCopy = () => {
         navigator.clipboard.writeText(inviteLink).catch(() => {});
@@ -93,11 +104,6 @@ function AddFriendSheet({ show, onClose }) {
         }, 1500);
     };
 
-    // Reset state when opening
-    useEffect(() => {
-        if (show) setCopied(false);
-    }, [show]);
-
     return (
         <div className={`absolute inset-0 z-50 flex flex-col justify-end transition-all duration-300 ${show ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}>
             <div className="absolute inset-0 bg-black/30 backdrop-blur-sm" onClick={onClose}></div>
@@ -107,20 +113,27 @@ function AddFriendSheet({ show, onClose }) {
                 <p className="text-[#8E8E93] text-[13px] font-medium text-center mb-6">Share this link — they'll join instantly</p>
 
                 {/* Invite link box */}
-                <div className="bg-[#F2F2F7] rounded-2xl px-5 py-4 mb-5">
-                    <p className="text-[13px] font-mono text-[#1C1C1E] text-center break-all select-all">{inviteLink}</p>
+                <div className="bg-[#F2F2F7] rounded-2xl px-5 py-4 mb-5 min-h-[52px] flex items-center justify-center">
+                    {generating ? (
+                        <p className="text-[13px] text-[#8E8E93] text-center animate-pulse">Generating link…</p>
+                    ) : (
+                        <p className="text-[13px] font-mono text-[#1C1C1E] text-center break-all select-all">{inviteLink}</p>
+                    )}
                 </div>
 
                 {/* Copy button */}
                 <button
                     onClick={handleCopy}
+                    disabled={generating}
                     className={`w-full py-4 rounded-2xl font-bold text-[15px] transition-all duration-300 ${
                         copied
                             ? 'bg-[#34C759] text-white'
-                            : 'bg-gradient-to-r from-[#7dd8d8] to-[#4a90d9] text-white active:scale-[0.98]'
+                            : generating
+                                ? 'bg-gray-200 text-gray-400 cursor-not-allowed'
+                                : 'bg-gradient-to-r from-[#7dd8d8] to-[#4a90d9] text-white active:scale-[0.98]'
                     }`}
                 >
-                    {copied ? 'Copied! ✓' : 'Copy Link'}
+                    {copied ? 'Copied! ✓' : generating ? 'Please wait…' : 'Copy Link'}
                 </button>
             </div>
         </div>
@@ -128,7 +141,7 @@ function AddFriendSheet({ show, onClose }) {
 }
 
 // ── Remind Sheet ───────────────────────────────────────────
-function RemindSheet({ show, onClose, friend, onSent }) {
+function RemindSheet({ show, onClose, friend, onSent, user }) {
     const [selectedIdx, setSelectedIdx] = useState(0);
     const [sending, setSending] = useState(false);
 
@@ -139,15 +152,42 @@ function RemindSheet({ show, onClose, friend, onSent }) {
         }
     }, [show]);
 
-    const handleSend = () => {
+    const handleSend = async () => {
+        if (!friend || !user) return;
         setSending(true);
-        setTimeout(() => {
-            onSent(friend?.id);
-            onClose();
-        }, 800);
+
+        try {
+            // Get the current user's ID token for auth
+            const idToken = await user.getIdToken();
+
+            const res = await fetch('/api/remind', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${idToken}`,
+                },
+                body: JSON.stringify({
+                    targetUid: friend.uid || friend.id,
+                    message: `${REMIND_MESSAGES[selectedIdx].emoji} ${REMIND_MESSAGES[selectedIdx].text}`,
+                }),
+            });
+
+            if (!res.ok) {
+                const errData = await res.json().catch(() => ({}));
+                console.error('Remind API error:', errData);
+            }
+        } catch (err) {
+            console.error('Failed to send reminder:', err);
+        }
+
+        // Always mark as sent (UX: don't let API failures block the UI)
+        onSent(friend?.id);
+        setTimeout(() => onClose(), 600);
     };
 
     if (!friend) return null;
+
+    const gradient = friend.gradient || ['#8E8E93', '#8E8E93'];
 
     return (
         <div className={`absolute inset-0 z-50 flex flex-col justify-end transition-all duration-300 ${show ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}>
@@ -159,7 +199,7 @@ function RemindSheet({ show, onClose, friend, onSent }) {
                 <div className="flex items-center gap-3 mb-4 justify-center">
                     <div
                         className="w-10 h-10 rounded-full flex items-center justify-center text-white text-sm font-bold"
-                        style={{ background: `linear-gradient(135deg, ${friend.gradient[0]}, ${friend.gradient[1]})` }}
+                        style={{ background: `linear-gradient(135deg, ${gradient[0]}, ${gradient[1]})` }}
                     >
                         {friend.initials}
                     </div>
@@ -205,14 +245,81 @@ function RemindSheet({ show, onClose, friend, onSent }) {
     );
 }
 
+// ── Empty State ────────────────────────────────────────────
+function EmptyState({ onAdd }) {
+    return (
+        <div className="flex-1 flex flex-col items-center justify-center px-8 text-center">
+            <div className="w-24 h-24 rounded-full bg-[#F2F2F7] flex items-center justify-center mb-6">
+                <span className="text-5xl">👀</span>
+            </div>
+            <h2 className="text-xl font-bold text-[#1C1C1E] mb-2">No friends yet</h2>
+            <p className="text-[#8E8E93] text-[14px] mb-8">
+                Add friends so you can track each other's hydration journey together!
+            </p>
+            <button
+                onClick={onAdd}
+                className="px-8 py-4 bg-gradient-to-r from-[#7dd8d8] to-[#4a90d9] text-white rounded-2xl font-bold text-[15px] active:scale-[0.98] transition-all shadow-lg shadow-[#7dd8d8]/20"
+            >
+                + Add a Friend
+            </button>
+        </div>
+    );
+}
+
 // ── Main FriendsView ───────────────────────────────────────
 export default function FriendsView({ onBack }) {
+    const s = useAppState();
+    const user = s.user;
+
     const [activeIdx, setActiveIdx] = useState(0);
     const [showAddSheet, setShowAddSheet] = useState(false);
     const [showRemindSheet, setShowRemindSheet] = useState(false);
     const [remindTarget, setRemindTarget] = useState(null);
     const [sentReminders, setSentReminders] = useState({});
-    const friends = MOCK_FRIENDS;
+
+    // Firestore-loaded friends
+    const [friends, setFriends] = useState([]);
+    const [loading, setLoading] = useState(true);
+    const [useMock, setUseMock] = useState(false);
+
+    // ── Load friends from Firestore ────────────────────────
+    const loadFriends = useCallback(async () => {
+        if (!user) return;
+        setLoading(true);
+        try {
+            const group = await getUserGroup(user.uid);
+            if (!group || !group.members || group.members.length <= 1) {
+                // No group or alone in group
+                setFriends([]);
+                setUseMock(false);
+                setLoading(false);
+                return;
+            }
+            const friendsData = await loadFriendsData(group.members, user.uid);
+            if (friendsData.length > 0) {
+                setFriends(friendsData);
+                setUseMock(false);
+            } else {
+                setFriends([]);
+                setUseMock(false);
+            }
+        } catch (err) {
+            console.error('Error loading friends:', err);
+            // Fallback to mock data for local testing
+            setFriends(MOCK_FRIENDS);
+            setUseMock(true);
+        }
+        setLoading(false);
+    }, [user]);
+
+    useEffect(() => {
+        loadFriends();
+    }, [loadFriends]);
+
+    // Refresh friends when add sheet closes (user may have created a group)
+    const handleAddSheetClose = () => {
+        setShowAddSheet(false);
+    };
 
     // ── Swipe / Drag handling ──────────────────────────────
     const containerRef = useRef(null);
@@ -221,11 +328,13 @@ export default function FriendsView({ onBack }) {
     const isDragging = useRef(false);
     const [dragOffset, setDragOffset] = useState(0);
 
+    const displayFriends = friends;
+
     const goTo = useCallback((idx) => {
-        const clamped = Math.max(0, Math.min(friends.length - 1, idx));
+        const clamped = Math.max(0, Math.min(displayFriends.length - 1, idx));
         setActiveIdx(clamped);
         setDragOffset(0);
-    }, [friends.length]);
+    }, [displayFriends.length]);
 
     const handleDragStart = (clientX) => {
         isDragging.current = true;
@@ -273,6 +382,32 @@ export default function FriendsView({ onBack }) {
         setSentReminders(prev => ({ ...prev, [friendId]: true }));
     };
 
+    // ── Loading state ──────────────────────────────────────
+    if (loading) {
+        return (
+            <>
+                <header className="pt-[calc(env(safe-area-inset-top)+1rem)] pb-4 px-8 z-30 bg-white/70 backdrop-blur-xl border-b border-gray-100/50 sticky top-0">
+                    <div className="flex justify-between items-center h-14">
+                        <div className="flex items-center gap-3">
+                            <button onClick={onBack} className="w-10 h-10 rounded-full flex items-center justify-center bg-[#F2F2F7] text-[#8E8E93] active:scale-90 transition-all -ml-1">
+                                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5">
+                                    <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
+                                </svg>
+                            </button>
+                            <div>
+                                <h1 className="text-2xl font-bold tracking-tight text-[#1C1C1E]">Friends</h1>
+                                <p className="text-[#8E8E93] text-[12px] font-medium">Loading…</p>
+                            </div>
+                        </div>
+                    </div>
+                </header>
+                <div className="flex-1 flex items-center justify-center">
+                    <div className="w-12 h-12 rounded-full bg-gradient-to-br from-[#7dd8d8] to-[#4a90d9] animate-pulse"></div>
+                </div>
+            </>
+        );
+    }
+
     return (
         <>
             {/* Header */}
@@ -291,7 +426,11 @@ export default function FriendsView({ onBack }) {
                         <div>
                             <h1 className="text-2xl font-bold tracking-tight text-[#1C1C1E]">Friends</h1>
                             <p className="text-[#8E8E93] text-[12px] font-medium">
-                                {friends.length} in your club 💧
+                                {displayFriends.length > 0
+                                    ? `${displayFriends.length} in your club 💧`
+                                    : 'Start your club 💧'
+                                }
+                                {useMock && <span className="text-[10px] text-[#FF9500] ml-1">(demo)</span>}
                             </p>
                         </div>
                     </div>
@@ -307,139 +446,143 @@ export default function FriendsView({ onBack }) {
                 </div>
             </header>
 
-            {/* Carousel Area */}
-            <div className="flex-1 relative overflow-hidden">
-                <div
-                    ref={containerRef}
-                    className="w-full h-full relative cursor-grab active:cursor-grabbing select-none"
-                    onTouchStart={onTouchStart}
-                    onTouchMove={onTouchMove}
-                    onTouchEnd={onTouchEnd}
-                    onMouseDown={onMouseDown}
-                    onMouseMove={onMouseMove}
-                    onMouseUp={onMouseUp}
-                    onMouseLeave={onMouseLeave}
-                >
-                    {friends.map((friend, idx) => {
-                        const isActive = idx === activeIdx;
-                        const progress = Math.min((friend.current / friend.goal) * 100, 100);
-                        const goalMet = friend.current >= friend.goal;
-                        const reminderSent = sentReminders[friend.id];
+            {/* Empty state or Carousel */}
+            {displayFriends.length === 0 ? (
+                <EmptyState onAdd={() => setShowAddSheet(true)} />
+            ) : (
+                <div className="flex-1 relative overflow-hidden">
+                    <div
+                        ref={containerRef}
+                        className="w-full h-full relative cursor-grab active:cursor-grabbing select-none"
+                        onTouchStart={onTouchStart}
+                        onTouchMove={onTouchMove}
+                        onTouchEnd={onTouchEnd}
+                        onMouseDown={onMouseDown}
+                        onMouseMove={onMouseMove}
+                        onMouseUp={onMouseUp}
+                        onMouseLeave={onMouseLeave}
+                    >
+                        {displayFriends.map((friend, idx) => {
+                            const isActive = idx === activeIdx;
+                            const progress = Math.min((friend.current / friend.goal) * 100, 100);
+                            const goalMet = friend.current >= friend.goal;
+                            const reminderSent = sentReminders[friend.id];
+                            const gradient = friend.gradient || getGradientForUid(friend.id);
 
-                        // Compute offscreen direction for inactive cards
-                        let cardOpacity = 0;
-                        let cardScale = 0.95;
-                        let translateX = 0;
+                            let cardOpacity = 0;
+                            let cardScale = 0.95;
+                            let translateX = 0;
 
-                        if (isActive) {
-                            cardOpacity = 1;
-                            cardScale = 1;
-                            // While dragging, shift card with finger
-                            translateX = dragOffset * 0.3;
-                        }
+                            if (isActive) {
+                                cardOpacity = 1;
+                                cardScale = 1;
+                                translateX = dragOffset * 0.3;
+                            }
 
-                        return (
-                            <div
-                                key={friend.id}
-                                className="absolute inset-0 w-full h-full flex flex-col items-center justify-start pt-6 pb-16 px-6 overflow-y-auto no-scrollbar"
-                                style={{
-                                    opacity: cardOpacity,
-                                    transform: `scale(${cardScale}) translateX(${translateX}px)`,
-                                    transition: isDragging.current ? 'none' : 'all 0.45s cubic-bezier(0.2, 0.8, 0.2, 1)',
-                                    pointerEvents: isActive ? 'auto' : 'none',
-                                    zIndex: isActive ? 10 : 0,
-                                }}
-                            >
-                                {/* Avatar */}
+                            return (
                                 <div
-                                    className="w-20 h-20 rounded-full flex items-center justify-center text-white text-2xl font-bold shadow-lg mb-4"
+                                    key={friend.id}
+                                    className="absolute inset-0 w-full h-full flex flex-col items-center justify-start pt-6 pb-16 px-6 overflow-y-auto no-scrollbar"
                                     style={{
-                                        background: `linear-gradient(135deg, ${friend.gradient[0]}, ${friend.gradient[1]})`,
-                                        boxShadow: `0 8px 24px ${friend.gradient[0]}40`,
+                                        opacity: cardOpacity,
+                                        transform: `scale(${cardScale}) translateX(${translateX}px)`,
+                                        transition: isDragging.current ? 'none' : 'all 0.45s cubic-bezier(0.2, 0.8, 0.2, 1)',
+                                        pointerEvents: isActive ? 'auto' : 'none',
+                                        zIndex: isActive ? 10 : 0,
                                     }}
                                 >
-                                    {friend.initials}
-                                </div>
-
-                                {/* Name */}
-                                <h2 className="text-2xl font-bold text-[#1C1C1E] mb-1">{friend.name}</h2>
-
-                                {/* Streak */}
-                                <p className="text-[#8E8E93] text-[13px] font-medium mb-5">
-                                    🔥 {friend.streak} day streak
-                                </p>
-
-                                {/* Water Count */}
-                                <div className="flex items-baseline space-x-1 justify-center mb-5">
-                                    <span className="text-[56px] font-medium tracking-[-0.05em] text-[#1C1C1E] leading-none">
-                                        {friend.current.toLocaleString()}
-                                    </span>
-                                    <span className="text-lg font-medium tracking-tight text-[#8E8E93]">
-                                        / {friend.goal.toLocaleString()} ml
-                                    </span>
-                                </div>
-
-                                {/* Water Bottle */}
-                                <div className="relative flex justify-center items-center mb-5">
-                                    <MiniBottle progress={progress} />
-                                </div>
-
-                                {/* Status Pill */}
-                                <div className="mb-5">
-                                    <StatusPill progress={progress} goalMet={goalMet} />
-                                </div>
-
-                                {/* Remind Button */}
-                                {goalMet ? (
-                                    <button
-                                        disabled
-                                        className="px-6 py-3 rounded-full border-2 border-[#34C759]/30 text-[#34C759] text-[13px] font-bold opacity-80 cursor-default"
+                                    {/* Avatar */}
+                                    <div
+                                        className="w-20 h-20 rounded-full flex items-center justify-center text-white text-2xl font-bold shadow-lg mb-4"
+                                        style={{
+                                            background: `linear-gradient(135deg, ${gradient[0]}, ${gradient[1]})`,
+                                            boxShadow: `0 8px 24px ${gradient[0]}40`,
+                                        }}
                                     >
-                                        ✅ Already crushed it!
-                                    </button>
-                                ) : reminderSent ? (
-                                    <button
-                                        disabled
-                                        className="px-6 py-3 rounded-full border-2 border-[#4a90d9]/30 text-[#4a90d9] text-[13px] font-bold cursor-default"
-                                    >
-                                        ✓ Reminder sent!
-                                    </button>
-                                ) : (
-                                    <button
-                                        onClick={() => handleRemindClick(friend)}
-                                        className="px-6 py-3 rounded-full border-2 border-gray-200 text-[#1C1C1E] text-[13px] font-bold hover:border-[#4a90d9] hover:text-[#4a90d9] active:scale-95 transition-all"
-                                    >
-                                        🔔 Remind to drink
-                                    </button>
-                                )}
-                            </div>
-                        );
-                    })}
+                                        {friend.initials}
+                                    </div>
+
+                                    {/* Name */}
+                                    <h2 className="text-2xl font-bold text-[#1C1C1E] mb-1">{friend.name}</h2>
+
+                                    {/* Streak */}
+                                    <p className="text-[#8E8E93] text-[13px] font-medium mb-5">
+                                        🔥 {friend.streak} day streak
+                                    </p>
+
+                                    {/* Water Count */}
+                                    <div className="flex items-baseline space-x-1 justify-center mb-5">
+                                        <span className="text-[56px] font-medium tracking-[-0.05em] text-[#1C1C1E] leading-none">
+                                            {friend.current.toLocaleString()}
+                                        </span>
+                                        <span className="text-lg font-medium tracking-tight text-[#8E8E93]">
+                                            / {friend.goal.toLocaleString()} ml
+                                        </span>
+                                    </div>
+
+                                    {/* Water Bottle */}
+                                    <div className="relative flex justify-center items-center mb-5">
+                                        <MiniBottle progress={progress} />
+                                    </div>
+
+                                    {/* Status Pill */}
+                                    <div className="mb-5">
+                                        <StatusPill progress={progress} goalMet={goalMet} />
+                                    </div>
+
+                                    {/* Remind Button */}
+                                    {goalMet ? (
+                                        <button
+                                            disabled
+                                            className="px-6 py-3 rounded-full border-2 border-[#34C759]/30 text-[#34C759] text-[13px] font-bold opacity-80 cursor-default"
+                                        >
+                                            ✅ Already crushed it!
+                                        </button>
+                                    ) : reminderSent ? (
+                                        <button
+                                            disabled
+                                            className="px-6 py-3 rounded-full border-2 border-[#4a90d9]/30 text-[#4a90d9] text-[13px] font-bold cursor-default"
+                                        >
+                                            ✓ Reminder sent!
+                                        </button>
+                                    ) : (
+                                        <button
+                                            onClick={() => handleRemindClick(friend)}
+                                            className="px-6 py-3 rounded-full border-2 border-gray-200 text-[#1C1C1E] text-[13px] font-bold hover:border-[#4a90d9] hover:text-[#4a90d9] active:scale-95 transition-all"
+                                        >
+                                            🔔 Remind to drink
+                                        </button>
+                                    )}
+                                </div>
+                            );
+                        })}
+                    </div>
+
+                    {/* Dot Indicators */}
+                    <div className="absolute bottom-6 left-0 right-0 flex items-center justify-center gap-2 z-20">
+                        {displayFriends.map((_, idx) => (
+                            <button
+                                key={idx}
+                                onClick={() => goTo(idx)}
+                                className={`rounded-full transition-all duration-300 ${
+                                    idx === activeIdx
+                                        ? 'w-6 h-2.5 bg-gradient-to-r from-[#7dd8d8] to-[#4a90d9]'
+                                        : 'w-2.5 h-2.5 bg-[#D1D1D6] hover:bg-[#AEAEB2]'
+                                }`}
+                            />
+                        ))}
+                    </div>
                 </div>
-
-                {/* Dot Indicators */}
-                <div className="absolute bottom-6 left-0 right-0 flex items-center justify-center gap-2 z-20">
-                    {friends.map((_, idx) => (
-                        <button
-                            key={idx}
-                            onClick={() => goTo(idx)}
-                            className={`rounded-full transition-all duration-300 ${
-                                idx === activeIdx
-                                    ? 'w-6 h-2.5 bg-gradient-to-r from-[#7dd8d8] to-[#4a90d9]'
-                                    : 'w-2.5 h-2.5 bg-[#D1D1D6] hover:bg-[#AEAEB2]'
-                            }`}
-                        />
-                    ))}
-                </div>
-            </div>
+            )}
 
             {/* Bottom Sheets */}
-            <AddFriendSheet show={showAddSheet} onClose={() => setShowAddSheet(false)} />
+            <AddFriendSheet show={showAddSheet} onClose={handleAddSheetClose} user={user} />
             <RemindSheet
                 show={showRemindSheet}
                 onClose={() => setShowRemindSheet(false)}
                 friend={remindTarget}
                 onSent={handleReminderSent}
+                user={user}
             />
         </>
     );

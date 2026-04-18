@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { useAppState } from './AppContext';
 import { globalCss } from './constants';
 import SplashScreen from './components/SplashScreen';
@@ -9,9 +9,35 @@ import RewardModal from './components/RewardModal';
 import HomeView from './components/HomeView';
 import StreakView from './components/StreakView';
 import FriendsView from './components/FriendsView';
+import InvitePage from './components/InvitePage';
 
 export default function App() {
     const s = useAppState();
+
+    // ── URL-based routing ──────────────────────────────────
+    const path = window.location.pathname;
+    const inviteMatch = path.match(/^\/invite\/(.+)$/);
+
+    // Auto-navigate to friends view if URL is /friends
+    useEffect(() => {
+        if (path === '/friends' && s.user && s.dataLoaded) {
+            s.setCurrentView('friends');
+            window.history.replaceState({}, '', '/');
+        }
+    }, [path, s.user, s.dataLoaded]);
+
+    // Handle /invite/[code] route — renders its own page with independent auth handling
+    if (inviteMatch) {
+        return (
+            <InvitePage
+                code={inviteMatch[1]}
+                user={s.user}
+                authResolved={s.authResolved}
+                handleLogin={s.handleLogin}
+                setCurrentView={s.setCurrentView}
+            />
+        );
+    }
 
     // 1. Waiting for Firebase Auth to resolve
     if (!s.authResolved) return <SplashScreen type="auth" />;
