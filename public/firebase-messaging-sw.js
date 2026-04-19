@@ -58,7 +58,7 @@ self.addEventListener('notificationclick', (event) => {
 // ----------------------------------------------------------
 // PWA CACHE — Install & cache static assets
 // ----------------------------------------------------------
-const CACHE_NAME = 'water-tracker-v12';
+const CACHE_NAME = 'water-tracker-v13';
 const PRECACHE_ASSETS = [
   '/',
   '/index.html',
@@ -91,7 +91,14 @@ self.addEventListener('fetch', (event) => {
   const { request } = event;
   const url = new URL(request.url);
 
+  // Skip non-origin requests (Firebase, Firestore, CDN, etc.)
   if (url.origin !== location.origin) return;
+
+  // Skip API routes
+  if (url.pathname.startsWith('/api/')) return;
+
+  // Only cache static assets
+  const isStatic = /\.(js|css|png|jpg|jpeg|svg|ico|woff2?)$/.test(url.pathname);
 
   if (request.mode === 'navigate') {
     event.respondWith(
@@ -110,7 +117,7 @@ self.addEventListener('fetch', (event) => {
     caches.match(request).then((cached) => {
       if (cached) return cached;
       return fetch(request).then((res) => {
-        if (res && res.ok) {
+        if (res && res.ok && isStatic) {
           const clone = res.clone();
           caches.open(CACHE_NAME).then((c) => c.put(request, clone));
         }
