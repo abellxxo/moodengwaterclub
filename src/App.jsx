@@ -16,7 +16,11 @@ export default function App() {
 
     // ── URL-based routing ──────────────────────────────────
     const path = window.location.pathname;
-    const inviteMatch = path.match(/^\/invite\/(.+)$/);
+    let inviteCode = null;
+    const pathParts = path.split('/').filter(Boolean);
+    if (pathParts[0] === 'invite' && pathParts[1]) {
+        inviteCode = pathParts[1];
+    }
 
     // Auto-navigate to friends view if URL is /friends
     useEffect(() => {
@@ -27,10 +31,10 @@ export default function App() {
     }, [path, s.user, s.dataLoaded]);
 
     // Handle /invite/[code] route — renders its own page with independent auth handling
-    if (inviteMatch) {
+    if (inviteCode) {
         return (
             <InvitePage
-                code={inviteMatch[1]}
+                code={inviteCode}
                 user={s.user}
                 authResolved={s.authResolved}
                 handleLogin={s.handleLogin}

@@ -1,8 +1,8 @@
 // Friends feature — all Firestore operations for groups, invites, profiles, and friend data loading.
 
 import {
-    doc, getDoc, setDoc, collection, query,
-    where, getDocs, arrayUnion, Timestamp
+    doc, getDoc, setDoc, deleteDoc, collection, query,
+    where, getDocs, arrayUnion, arrayRemove, Timestamp
 } from 'firebase/firestore';
 import { db, APP_ID } from './firebase';
 import { getLogicalDateStr, calculateStreak } from './streakUtils';
@@ -131,7 +131,29 @@ export const acceptInvite = async (code, uid) => {
         return invite.groupId;
     }
 
-    // Add to group
+    // --- FIX BUG 3: Remove user from any existing groups first ---
+    const groupsRef = collection(db, 'artifacts', APP_ID, 'groups');
+    const q = query(groupsRef, where('members', 'array-contains', uid));
+    const oldGroupsSnap = await getDocs(q);
+    
+    for (const oldGroupDoc of oldGroupsSnap.docs) {
+        const oldGroupId = oldGroupDoc.id;
+        // Don't modify the group they are trying to join (should be handled by includes check, but just in case)
+        if (oldGroupId === invite.groupId) continue;
+
+        const oldGroupRef = doc(db, 'artifacts', APP_ID, 'groups', oldGroupId);
+        const oldGroupMembers = oldGroupDoc.data().members;
+        
+        if (oldGroupMembers.length <= 1) {
+            // Group will be empty, delete it
+            await deleteDoc(oldGroupRef);
+        } else {
+            // Remove user from the old group
+            await setDoc(oldGroupRef, { members: arrayRemove(uid) }, { merge: true });
+        }
+    }
+
+    // Add to the new group
     await setDoc(groupRef, { members: arrayUnion(uid) }, { merge: true });
 
     // Also ensure the accepting user's group reference is created

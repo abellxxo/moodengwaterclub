@@ -93,17 +93,27 @@ export function useAppState() {
     const registerFCMToken = async () => {
         if (!user || !messaging) return;
         try {
-    const currentToken = await getToken(messaging, {
+            const swReg = await navigator.serviceWorker.register('/firebase-messaging-sw.js');
+            console.log('[SW] Registration successful. Waiting for ready state...');
+            await navigator.serviceWorker.ready; // IMPORTANT: wait for SW to be ready on iOS
+            console.log('[SW] Ready state reached. Requesting FCM token...');
+
+            const currentToken = await getToken(messaging, {
                 vapidKey: import.meta.env.VITE_FIREBASE_VAPID_KEY,
-                serviceWorkerRegistration: await navigator.serviceWorker.register('/firebase-messaging-sw.js')
+                serviceWorkerRegistration: swReg
             });
+            
             if (currentToken) {
-                console.log('FCM Token:', currentToken);
+                console.log('✅ FCM Token generated successfully:', currentToken);
                 const tokenDocRef = doc(db, 'artifacts', APP_ID, 'users', user.uid, 'data', 'fcmToken');
                 await setDoc(tokenDocRef, { token: currentToken, updatedAt: new Date().toISOString() }, { merge: true });
+                console.log('✅ FCM Token saved to Firestore (users/' + user.uid + '/data/fcmToken)');
+            } else {
+                console.warn('⚠️ No FCM token returned. Ensure permission is granted.');
             }
         } catch (err) {
-            console.error('FCM token registration failed:', err);
+            console.error('❌ FCM token registration failed! Error:', err.message || err);
+            console.error(err);
         }
     };
 
@@ -131,7 +141,8 @@ export function useAppState() {
     // Auto-register if permission already granted (desktop revisit)
     useEffect(() => {
         if (!user || !messaging) return;
-        if (Notification.permission === 'granted') {
+        // Safely check Notification object because it might be undefined on some older iOS without PWA installed
+        if (typeof window !== 'undefined' && 'Notification' in window && Notification.permission === 'granted') {
             registerFCMToken();
         }
 
