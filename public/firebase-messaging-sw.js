@@ -36,7 +36,7 @@ messaging.onBackgroundMessage((payload) => {
   };
 
   // NOTE: FCM otomatis menampilkan notifikasi jika payload berisi objek 'notification'.
-  // self.registration.showNotification(notificationTitle, notificationOptions);
+  self.registration.showNotification(notificationTitle, notificationOptions);
 });
 
 // Handle notification click — open the app
@@ -59,7 +59,7 @@ self.addEventListener('notificationclick', (event) => {
 // ----------------------------------------------------------
 // PWA CACHE — Install & cache static assets
 // ----------------------------------------------------------
-const CACHE_NAME = 'water-tracker-v14';
+const CACHE_NAME = 'water-tracker-v15';
 const PRECACHE_ASSETS = [
   '/',
   '/index.html',
