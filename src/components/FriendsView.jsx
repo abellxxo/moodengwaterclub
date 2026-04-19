@@ -2,7 +2,7 @@ import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { useAppState } from '../AppContext';
 import { auth } from '../firebase';
 import {
-    getUserGroup, loadFriendsData, generateInviteLink, getGradientForUid
+    getUserGroup, subscribeFriendsData, generateInviteLink, getGradientForUid
 } from '../friendsService';
 import SplashScreen from './SplashScreen';
 
@@ -282,11 +282,17 @@ export default function FriendsView({ onBack }) {
     const [friends, setFriends] = useState([]);
     const [loading, setLoading] = useState(true);
     const [useMock, setUseMock] = useState(false);
+    const unsubRef = useRef(null);
 
     // ── Load friends from Firestore ────────────────────────
     const loadFriends = useCallback(async () => {
         if (!user) return;
         setLoading(true);
+        if (unsubRef.current) {
+            unsubRef.current();
+            unsubRef.current = null;
+        }
+
         try {
             const group = await getUserGroup(user.uid);
             if (!group || !group.members || group.members.length <= 1) {
@@ -296,25 +302,37 @@ export default function FriendsView({ onBack }) {
                 setLoading(false);
                 return;
             }
-            const friendsData = await loadFriendsData(group.members, user.uid);
-            if (friendsData.length > 0) {
-                setFriends(friendsData);
-                setUseMock(false);
-            } else {
-                setFriends([]);
-                setUseMock(false);
-            }
+            
+            const unsubscribe = await subscribeFriendsData(group.members, user.uid, (friendsData) => {
+                if (friendsData.length > 0) {
+                    setFriends(friendsData);
+                    setUseMock(false);
+                } else {
+                    setFriends([]);
+                    setUseMock(false);
+                }
+                setLoading(false);
+            });
+            unsubRef.current = unsubscribe;
+
         } catch (err) {
             console.error('Error loading friends:', err);
             // Fallback to mock data for local testing
             setFriends(MOCK_FRIENDS);
             setUseMock(true);
+            setLoading(false);
         }
-        setLoading(false);
     }, [user]);
 
     useEffect(() => {
         loadFriends();
+        
+        return () => {
+            if (unsubRef.current) {
+                unsubRef.current();
+                unsubRef.current = null;
+            }
+        };
     }, [loadFriends]);
 
     useEffect(() => {

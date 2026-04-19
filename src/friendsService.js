@@ -2,7 +2,7 @@
 
 import {
     doc, getDoc, setDoc, deleteDoc, collection, query,
-    where, getDocs, arrayUnion, arrayRemove, Timestamp
+    where, getDocs, arrayUnion, arrayRemove, Timestamp, onSnapshot
 } from 'firebase/firestore';
 import { db, APP_ID } from './firebase';
 import { getLogicalDateStr, calculateStreak } from './streakUtils';
@@ -207,6 +207,70 @@ export const loadFriendsData = async (groupMembers, selfUid) => {
     }));
 
     return friends;
+};
+
+export const subscribeFriendsData = async (groupMembers, selfUid, callback) => {
+    const friendUids = groupMembers.filter(uid => uid !== selfUid);
+    const today = getLogicalDateStr();
+
+    if (friendUids.length === 0) {
+        callback([]);
+        return () => {};
+    }
+
+    // Load profile data once (assumed not to change frequently enough to need a snapshot)
+    const profiles = {};
+    for (const uid of friendUids) {
+        profiles[uid] = await getFriendProfile(uid);
+    }
+
+    const unsubscribes = [];
+    const friendsState = {};
+    let loadedCount = 0;
+
+    friendUids.forEach((uid) => {
+        const trackerRef = doc(db, 'artifacts', APP_ID, 'users', uid, 'data', 'tracker');
+        const unsub = onSnapshot(trackerRef, (snap) => {
+            const isFirstLoad = !friendsState[uid];
+            const tracker = snap.exists() ? snap.data() : null;
+            const profile = profiles[uid];
+
+            const goal = tracker?.goal || 1500;
+            const current = tracker?.history?.[today] || 0;
+            const history = tracker?.history || {};
+            const streakResetDate = tracker?.streakResetDate || null;
+
+            const streak = calculateStreak(history, goal, streakResetDate);
+            const username = profile?.username || 'Unknown';
+            const gradient = getGradientForUid(uid);
+
+            friendsState[uid] = {
+                id: uid,
+                name: username,
+                initials: username.substring(0, 2).toUpperCase(),
+                gradient,
+                goal,
+                current,
+                streak,
+                uid,
+            };
+
+            if (isFirstLoad) {
+                loadedCount++;
+            }
+
+            // Only fire the callback when we have at least one snapshot for every friend
+            if (loadedCount === friendUids.length) {
+                const friendsArray = friendUids.map(u => friendsState[u]);
+                callback(friendsArray);
+            }
+        });
+        unsubscribes.push(unsub);
+    });
+
+    return () => {
+        unsubscribes.forEach(unsub => unsub());
+    };
 };
 
 // ── Invite Flow (combined: ensure group + create invite) ───
