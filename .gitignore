@@ -23,3 +23,8 @@ Thumbs.db
 # Firebase Service Account Key (DO NOT COMMIT)
 service-account.json
 *.json.key
+
+# Temp / debug files
+firebase-debug.log
+*.fixed
+*.cjs
