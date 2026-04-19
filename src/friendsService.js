@@ -43,13 +43,20 @@ export const ensureProfile = async (user) => {
     if (!user) return null;
     const profileRef = doc(db, 'artifacts', APP_ID, 'users', user.uid, 'data', 'profile');
     const snap = await getDoc(profileRef);
+    const desiredUsername = user.displayName || user.email?.split('@')[0] || 'User';
+
     if (!snap.exists()) {
-        const username = user.email?.split('@')[0] || 'user';
-        const profileData = { username, uid: user.uid };
+        const profileData = { username: desiredUsername, uid: user.uid };
         await setDoc(profileRef, profileData);
         return profileData;
     }
-    return snap.data();
+    
+    const existing = snap.data();
+    if (existing.username !== desiredUsername) {
+        await setDoc(profileRef, { username: desiredUsername }, { merge: true });
+        existing.username = desiredUsername;
+    }
+    return existing;
 };
 
 // ── Groups ─────────────────────────────────────────────────

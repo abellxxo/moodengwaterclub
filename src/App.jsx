@@ -49,19 +49,7 @@ export default function App() {
     if (!s.user) return <LandingPage toast={s.toast} handleLogin={s.handleLogin} />;
 
     // 4. Logged in → main app
-    // If viewing friends, render full-screen friends view
-    if (s.currentView === 'friends') {
-        return (
-            <div className="bg-[#ffffff] sm:bg-[#EAB0BE] fixed inset-0 w-full h-full flex items-center justify-center font-sans text-[#1C1C1E] selection:bg-[#B8E9F3] antialiased overflow-hidden sm:py-10">
-                <style dangerouslySetInnerHTML={{ __html: globalCss }} />
-                <main className="bg-[#ffffff] w-full h-full sm:h-[844px] sm:max-w-[390px] sm:rounded-[3rem] overflow-hidden flex flex-col relative sm:shadow-2xl sm:ring-1 sm:ring-[#EAB0BE]/30 mx-auto">
-                    <div className="absolute bottom-[-5%] right-[-10%] w-[80vw] max-w-[400px] h-[80vw] max-h-[400px] bg-[#EAB0BE]/50 rounded-full blur-[80px] pointer-events-none z-0"></div>
-                    <div className="absolute bottom-[5%] left-[-10%] w-[60vw] max-w-[350px] h-[60vw] max-h-[350px] bg-[#B8E9F3]/50 rounded-full blur-[80px] pointer-events-none z-0"></div>
-                    <FriendsView onBack={() => s.setCurrentView('home')} />
-                </main>
-            </div>
-        );
-    }
+    // Render the main app container with sliding views (Moods/Friends handled via transition inside)
 
     return (
         <div className="bg-[#ffffff] sm:bg-[#EAB0BE] fixed inset-0 w-full h-full flex items-center justify-center font-sans text-[#1C1C1E] selection:bg-[#B8E9F3] antialiased overflow-hidden sm:py-10">
@@ -109,7 +97,7 @@ export default function App() {
                     <div className="flex justify-between items-center h-14">
                         <div>
                             <h1 className="text-2xl font-bold tracking-tight text-[#1C1C1E]">
-                                {s.currentView === 'home' ? 'Moodeng Water' : 'Streak'}
+                                {s.currentView === 'home' ? 'Moodeng Water' : (s.currentView === 'streak' ? 'Streak' : 'Moods')}
                             </h1>
                             <p className="text-[#8E8E93] text-[12px] font-medium flex items-center gap-1.5">
                                 {(s.user.displayName?.split(' ')[0] || 'User').substring(0, 10)}'s Tracker
@@ -130,11 +118,11 @@ export default function App() {
                                     </svg>
                                 </button>
                             )}
-                            {/* Friends button */}
+                            {/* Moods button */}
                             <button
                                 onClick={() => s.setCurrentView('friends')}
                                 className="w-10 h-10 rounded-full flex items-center justify-center transition-all active:scale-90 bg-[#F2F2F7] text-[#8E8E93] hover:text-[#4a90d9]"
-                                title="Friends"
+                                title="Moods"
                             >
                                 <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
                                     <path strokeLinecap="round" strokeLinejoin="round" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
@@ -215,6 +203,20 @@ export default function App() {
                             <path strokeLinecap="round" strokeLinejoin="round" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
                         </svg>
                     </button>
+                </div>
+
+                {/* MOODS / FRIENDS VIEW OVERLAY */}
+                {/* 
+                   It leverages an absolute overlay so it slides smoothly over the main app content. 
+                   We give it a white background so it obscures the home view completely.
+                */}
+                <div className={`absolute inset-0 w-full h-full bg-[#ffffff] sm:bg-transparent z-50 transition-transform duration-500 ease-[cubic-bezier(0.2,0.8,0.2,1)] flex flex-col sm:rounded-[3rem] ${s.currentView === 'friends' ? 'translate-x-0 overflow-y-auto no-scrollbar pointer-events-auto' : 'translate-x-[100%] pointer-events-none'}`}>
+                    <div className="absolute bottom-[-5%] right-[-10%] w-[80vw] max-w-[400px] h-[80vw] max-h-[400px] bg-[#EAB0BE]/50 rounded-full blur-[80px] pointer-events-none z-0"></div>
+                    <div className="absolute bottom-[5%] left-[-10%] w-[60vw] max-w-[350px] h-[60vw] max-h-[350px] bg-[#B8E9F3]/50 rounded-full blur-[80px] pointer-events-none z-0"></div>
+                    
+                    <div className="relative z-10 w-full h-full flex flex-col">
+                        <FriendsView onBack={() => s.setCurrentView('home')} />
+                    </div>
                 </div>
 
             </main>

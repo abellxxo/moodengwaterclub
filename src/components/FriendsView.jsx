@@ -4,6 +4,7 @@ import { auth } from '../firebase';
 import {
     getUserGroup, loadFriendsData, generateInviteLink, getGradientForUid
 } from '../friendsService';
+import SplashScreen from './SplashScreen';
 
 // ── Fallback mock data (used if Firestore returns empty, for local testing) ──
 const MOCK_FRIENDS = [
@@ -109,7 +110,7 @@ function AddFriendSheet({ show, onClose, user }) {
             <div className="absolute inset-0 bg-black/30 backdrop-blur-sm" onClick={onClose}></div>
             <div className={`bg-white w-full rounded-t-[2.5rem] p-8 pb-12 shadow-2xl relative z-10 transform transition-all duration-400 ease-[cubic-bezier(0.2,0.8,0.2,1)] ${show ? 'translate-y-0' : 'translate-y-full'}`}>
                 <div className="w-12 h-1.5 bg-gray-200 rounded-full mx-auto mb-6"></div>
-                <h3 className="text-xl font-bold text-[#1C1C1E] mb-1 text-center">Add a friend 💧</h3>
+                <h3 className="text-xl font-bold text-[#1C1C1E] mb-1 text-center">Add a Mood 💧</h3>
                 <p className="text-[#8E8E93] text-[13px] font-medium text-center mb-6">Share this link — they'll join instantly</p>
 
                 {/* Invite link box */}
@@ -252,15 +253,15 @@ function EmptyState({ onAdd }) {
             <div className="w-24 h-24 rounded-full bg-[#F2F2F7] flex items-center justify-center mb-6">
                 <span className="text-5xl">👀</span>
             </div>
-            <h2 className="text-xl font-bold text-[#1C1C1E] mb-2">No friends yet</h2>
+            <h2 className="text-xl font-bold text-[#1C1C1E] mb-2">No moods yet</h2>
             <p className="text-[#8E8E93] text-[14px] mb-8">
-                Add friends so you can track each other's hydration journey together!
+                Add moods so you can track each other's hydration journey together!
             </p>
             <button
                 onClick={onAdd}
                 className="px-8 py-4 bg-gradient-to-r from-[#7dd8d8] to-[#4a90d9] text-white rounded-2xl font-bold text-[15px] active:scale-[0.98] transition-all shadow-lg shadow-[#7dd8d8]/20"
             >
-                + Add a Friend
+                + Add a Mood
             </button>
         </div>
     );
@@ -384,28 +385,7 @@ export default function FriendsView({ onBack }) {
 
     // ── Loading state ──────────────────────────────────────
     if (loading) {
-        return (
-            <>
-                <header className="pt-[calc(env(safe-area-inset-top)+1rem)] pb-4 px-8 z-30 bg-white/70 backdrop-blur-xl border-b border-gray-100/50 sticky top-0">
-                    <div className="flex justify-between items-center h-14">
-                        <div className="flex items-center gap-3">
-                            <button onClick={onBack} className="w-10 h-10 rounded-full flex items-center justify-center bg-[#F2F2F7] text-[#8E8E93] active:scale-90 transition-all -ml-1">
-                                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5">
-                                    <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
-                                </svg>
-                            </button>
-                            <div>
-                                <h1 className="text-2xl font-bold tracking-tight text-[#1C1C1E]">Friends</h1>
-                                <p className="text-[#8E8E93] text-[12px] font-medium">Loading…</p>
-                            </div>
-                        </div>
-                    </div>
-                </header>
-                <div className="flex-1 flex items-center justify-center">
-                    <div className="w-12 h-12 rounded-full bg-gradient-to-br from-[#7dd8d8] to-[#4a90d9] animate-pulse"></div>
-                </div>
-            </>
-        );
+        return <SplashScreen type="auth" />;
     }
 
     return (
@@ -413,36 +393,34 @@ export default function FriendsView({ onBack }) {
             {/* Header */}
             <header className="pt-[calc(env(safe-area-inset-top)+1rem)] pb-4 px-8 z-30 bg-white/70 backdrop-blur-xl border-b border-gray-100/50 sticky top-0">
                 <div className="flex justify-between items-center h-14">
-                    <div className="flex items-center gap-3">
-                        {/* Back button */}
+                    <div className="flex flex-col justify-center">
+                        <h1 className="text-2xl font-bold tracking-tight text-[#1C1C1E]">Moods</h1>
+                        <p className="text-[#8E8E93] text-[12px] font-medium">
+                            {displayFriends.length > 0
+                                ? `${displayFriends.length} in your club 💧`
+                                : 'Start your club 💧'
+                            }
+                            {useMock && <span className="text-[10px] text-[#FF9500] ml-1">(demo)</span>}
+                        </p>
+                    </div>
+                    <div className="flex items-center gap-2">
+                        {/* Add Mood button */}
+                        <button
+                            onClick={() => setShowAddSheet(true)}
+                            className="w-10 h-10 rounded-full bg-[#4a90d9] text-white flex items-center justify-center shadow-md shadow-[#4a90d9]/30 active:scale-90 transition-all font-bold text-xl pb-1"
+                        >
+                            +
+                        </button>
+                        {/* Close button (X) */}
                         <button
                             onClick={onBack}
-                            className="w-10 h-10 rounded-full flex items-center justify-center bg-[#F2F2F7] text-[#8E8E93] active:scale-90 transition-all -ml-1"
+                            className="w-10 h-10 rounded-full flex items-center justify-center bg-[#F2F2F7] text-[#8E8E93] active:scale-90 transition-all"
                         >
-                            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5">
-                                <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
+                            <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5">
+                                <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
                             </svg>
                         </button>
-                        <div>
-                            <h1 className="text-2xl font-bold tracking-tight text-[#1C1C1E]">Friends</h1>
-                            <p className="text-[#8E8E93] text-[12px] font-medium">
-                                {displayFriends.length > 0
-                                    ? `${displayFriends.length} in your club 💧`
-                                    : 'Start your club 💧'
-                                }
-                                {useMock && <span className="text-[10px] text-[#FF9500] ml-1">(demo)</span>}
-                            </p>
-                        </div>
                     </div>
-                    {/* Add friend button */}
-                    <button
-                        onClick={() => setShowAddSheet(true)}
-                        className="w-10 h-10 rounded-xl bg-gradient-to-br from-[#7dd8d8] to-[#4a90d9] text-white flex items-center justify-center shadow-lg shadow-[#7dd8d8]/30 active:scale-90 transition-all"
-                    >
-                        <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5">
-                            <path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16m8-8H4" />
-                        </svg>
-                    </button>
                 </div>
             </header>
 
