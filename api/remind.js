@@ -2,7 +2,7 @@
 // POST /api/remind  { targetUid: string, message: string }
 // Authorization: Bearer <firebase-id-token>
 
-const admin = require('firebase-admin');
+import admin from 'firebase-admin';
 
 // Initialize Firebase Admin SDK (once)
 if (!admin.apps.length) {
@@ -20,7 +20,7 @@ if (!admin.apps.length) {
 
 const APP_ID = 'water-tracker-kita';
 
-module.exports = async (req, res) => {
+export default async function handler(req, res) {
     // CORS headers
     res.setHeader('Access-Control-Allow-Origin', '*');
     res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
