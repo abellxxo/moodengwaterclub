@@ -55,6 +55,17 @@ exports.sendWaterReminders = functions
           title: notificationTitle,
           body: notificationBody,
         },
+        webpush: {
+          headers: {
+            Urgency: 'high',
+          },
+          notification: {
+            icon: '/icon-192.png',
+            badge: '/icon-192.png',
+            tag: 'water-reminder',
+            renotify: true,
+          },
+        },
         android: {
           priority: "high",
           notification: {
@@ -66,6 +77,16 @@ exports.sendWaterReminders = functions
         apns: {
           headers: {
             "apns-priority": "10",
+            "apns-push-type": "alert",
+          },
+          payload: {
+            aps: {
+              alert: {
+                title: notificationTitle,
+                body: notificationBody,
+              },
+              sound: "default",
+            },
           },
         },
         tokens: tokens,

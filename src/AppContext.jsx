@@ -70,14 +70,15 @@ export function useAppState() {
     }, [user]);
 
     // --- CLEANUP OLD SERVICE WORKERS ---
-    // Unregister old sw.js to prevent double notifications
+    // Unregister any SW that is NOT our canonical firebase-messaging-sw.js
     useEffect(() => {
         if ('serviceWorker' in navigator) {
             navigator.serviceWorker.getRegistrations().then((registrations) => {
                 for (const reg of registrations) {
-                    if (reg.active?.scriptURL?.includes('/sw.js')) {
+                    const scriptURL = reg.active?.scriptURL || '';
+                    if (scriptURL && !scriptURL.includes('firebase-messaging-sw.js')) {
                         reg.unregister().then(() => {
-                            console.log('[SW] Unregistered old sw.js');
+                            console.log('[SW] Unregistered non-canonical SW:', scriptURL);
                         });
                     }
                 }

@@ -73,6 +73,32 @@ export default async function handler(req, res) {
                 title: 'Water Reminder 💧',
                 body: message,
             },
+            webpush: {
+                headers: {
+                    Urgency: 'high',
+                },
+                notification: {
+                    icon: '/icon-192.png',
+                    badge: '/icon-192.png',
+                    tag: 'water-reminder',
+                    renotify: true,
+                },
+            },
+            apns: {
+                headers: {
+                    'apns-priority': '10',
+                    'apns-push-type': 'alert',
+                },
+                payload: {
+                    aps: {
+                        alert: {
+                            title: 'Water Reminder 💧',
+                            body: message,
+                        },
+                        sound: 'default',
+                    },
+                },
+            },
             token: fcmToken,
         });
 

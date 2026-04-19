@@ -15,28 +15,56 @@ firebase.initializeApp({
   appId: '1:1065083698538:web:0198badb0d75388e4db913'
 });
 
+// Initialize messaging so FCM can register with the push service
 const messaging = firebase.messaging();
 
 // ----------------------------------------------------------
-// FCM — Handle background messages
+// FCM — Handle background push using raw 'push' event
+// Using raw event listener instead of onBackgroundMessage()
+// because iOS 16.4-16.7 (WebKit) requires an explicit
+// event.waitUntil() chain to avoid "silent push" revocation.
 // ----------------------------------------------------------
-messaging.onBackgroundMessage((payload) => {
-  console.log('[firebase-messaging-sw.js] Background message received:', payload);
+self.addEventListener('push', (event) => {
+  // If there's no data, skip — but we must still show a notification
+  // on iOS to avoid permission revocation.
+  let title = 'Water Reminder';
+  let body = "Don't forget to drink your water!";
+  let data = {};
 
-  const notificationTitle = payload.notification?.title || '💧 Water Reminder';
+  if (event.data) {
+    try {
+      const payload = event.data.json();
+      // FCM wraps the payload — check both top-level and nested notification
+      const notif = payload.notification || {};
+      title = notif.title || payload.data?.title || title;
+      body = notif.body || payload.data?.body || body;
+      data = payload.data || {};
+    } catch (e) {
+      // If JSON parsing fails, try text
+      try {
+        body = event.data.text() || body;
+      } catch (e2) {
+        // Use defaults
+      }
+    }
+  }
+
   const notificationOptions = {
-    body: payload.notification?.body || "Don't forget to drink your water!",
+    body: body,
     icon: '/icon-192.png',
     badge: '/icon-192.png',
     tag: 'water-reminder',
     renotify: true,
-    actions: [
-      { action: 'open', title: 'Open App' }
-    ]
+    data: data,
+    // NOTE: 'actions' are NOT supported on iOS Safari — omitted intentionally
   };
 
-  // NOTE: FCM otomatis menampilkan notifikasi jika payload berisi objek 'notification'.
-  self.registration.showNotification(notificationTitle, notificationOptions);
+  // CRITICAL: event.waitUntil() is REQUIRED on iOS.
+  // Without it, iOS treats the push as "silent" and will revoke
+  // notification permission after ~3 occurrences.
+  event.waitUntil(
+    self.registration.showNotification(title, notificationOptions)
+  );
 });
 
 // Handle notification click — open the app
@@ -59,7 +87,7 @@ self.addEventListener('notificationclick', (event) => {
 // ----------------------------------------------------------
 // PWA CACHE — Install & cache static assets
 // ----------------------------------------------------------
-const CACHE_NAME = 'water-tracker-v15';
+const CACHE_NAME = 'water-tracker-v16';
 const PRECACHE_ASSETS = [
   '/',
   '/index.html',
