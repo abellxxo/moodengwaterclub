@@ -20,13 +20,12 @@ const messaging = firebase.messaging();
 
 // ----------------------------------------------------------
 // FCM — Handle background push using raw 'push' event
-// Using raw event listener instead of onBackgroundMessage()
-// because iOS 16.4-16.7 (WebKit) requires an explicit
-// event.waitUntil() chain to avoid "silent push" revocation.
+// We use DATA-ONLY payloads from the server (no 'notification' key)
+// so FCM SDK won't auto-display. Only this handler shows notifications.
+// iOS 16.4-16.7 requires explicit event.waitUntil() to avoid
+// "silent push" permission revocation.
 // ----------------------------------------------------------
 self.addEventListener('push', (event) => {
-  // If there's no data, skip — but we must still show a notification
-  // on iOS to avoid permission revocation.
   let title = 'Water Reminder';
   let body = "Don't forget to drink your water!";
   let data = {};
@@ -34,13 +33,23 @@ self.addEventListener('push', (event) => {
   if (event.data) {
     try {
       const payload = event.data.json();
-      // FCM wraps the payload — check both top-level and nested notification
-      const notif = payload.notification || {};
-      title = notif.title || payload.data?.title || title;
-      body = notif.body || payload.data?.body || body;
-      data = payload.data || {};
+
+      // FCM data-only messages put content under payload.data
+      // FCM notification messages put content under payload.notification
+      // We check both for maximum compatibility
+      const d = payload.data || {};
+      const n = payload.notification || {};
+
+      title = d.title || n.title || title;
+      body = d.body || n.body || body;
+      data = d;
+
+      // If this is an FCM message that the SDK already displayed
+      // (has notification key AND isFirebaseMessaging flag), skip to avoid double
+      if (payload.notification && payload.isFirebaseMessaging) {
+        return;
+      }
     } catch (e) {
-      // If JSON parsing fails, try text
       try {
         body = event.data.text() || body;
       } catch (e2) {
@@ -56,12 +65,9 @@ self.addEventListener('push', (event) => {
     tag: 'water-reminder',
     renotify: true,
     data: data,
-    // NOTE: 'actions' are NOT supported on iOS Safari — omitted intentionally
   };
 
   // CRITICAL: event.waitUntil() is REQUIRED on iOS.
-  // Without it, iOS treats the push as "silent" and will revoke
-  // notification permission after ~3 occurrences.
   event.waitUntil(
     self.registration.showNotification(title, notificationOptions)
   );
@@ -87,7 +93,7 @@ self.addEventListener('notificationclick', (event) => {
 // ----------------------------------------------------------
 // PWA CACHE — Install & cache static assets
 // ----------------------------------------------------------
-const CACHE_NAME = 'water-tracker-v16';
+const CACHE_NAME = 'water-tracker-v17';
 const PRECACHE_ASSETS = [
   '/',
   '/index.html',

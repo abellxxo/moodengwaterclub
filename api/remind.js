@@ -67,21 +67,17 @@ export default async function handler(req, res) {
 
         const fcmToken = tokenDoc.data().token;
 
-        // Send the push notification
+        // Send the push notification — DATA-ONLY payload.
+        // No top-level 'notification' key to prevent FCM auto-display (double notif).
+        // Our service worker's raw 'push' listener handles display.
         await admin.messaging().send({
-            notification: {
+            data: {
                 title: 'Water Reminder 💧',
                 body: message,
             },
             webpush: {
                 headers: {
                     Urgency: 'high',
-                },
-                notification: {
-                    icon: '/icon-192.png',
-                    badge: '/icon-192.png',
-                    tag: 'water-reminder',
-                    renotify: true,
                 },
             },
             apns: {
@@ -91,6 +87,7 @@ export default async function handler(req, res) {
                 },
                 payload: {
                     aps: {
+                        'content-available': 1,
                         alert: {
                             title: 'Water Reminder 💧',
                             body: message,

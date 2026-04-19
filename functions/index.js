@@ -51,7 +51,10 @@ exports.sendWaterReminders = functions
       console.log(`Sending notification to ${tokens.length} devices.`);
 
       const response = await admin.messaging().sendEachForMulticast({
-        notification: {
+        // DATA-ONLY payload — no top-level 'notification' key.
+        // This prevents FCM from auto-displaying (which caused double notifications).
+        // Our service worker's raw 'push' event listener handles display instead.
+        data: {
           title: notificationTitle,
           body: notificationBody,
         },
@@ -59,20 +62,9 @@ exports.sendWaterReminders = functions
           headers: {
             Urgency: 'high',
           },
-          notification: {
-            icon: '/icon-192.png',
-            badge: '/icon-192.png',
-            tag: 'water-reminder',
-            renotify: true,
-          },
         },
         android: {
           priority: "high",
-          notification: {
-            priority: "max",
-            defaultSound: true,
-            channelId: "water-reminders",
-          },
         },
         apns: {
           headers: {
@@ -81,6 +73,7 @@ exports.sendWaterReminders = functions
           },
           payload: {
             aps: {
+              "content-available": 1,
               alert: {
                 title: notificationTitle,
                 body: notificationBody,
