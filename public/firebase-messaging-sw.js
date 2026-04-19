@@ -59,7 +59,7 @@ self.addEventListener('notificationclick', (event) => {
 // ----------------------------------------------------------
 // PWA CACHE — Install & cache static assets
 // ----------------------------------------------------------
-const CACHE_NAME = 'water-tracker-v13';
+const CACHE_NAME = 'water-tracker-v14';
 const PRECACHE_ASSETS = [
   '/',
   '/index.html',
