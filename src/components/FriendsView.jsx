@@ -431,7 +431,7 @@ export default function FriendsView({ onBack }) {
                 <div className="flex-1 relative overflow-hidden">
                     <div
                         ref={containerRef}
-                        className="w-full h-full relative cursor-grab active:cursor-grabbing select-none"
+                        className="w-full h-full relative cursor-grab active:cursor-grabbing select-none touch-pan-y"
                         onTouchStart={onTouchStart}
                         onTouchMove={onTouchMove}
                         onTouchEnd={onTouchEnd}

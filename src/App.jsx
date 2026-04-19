@@ -207,15 +207,18 @@ export default function App() {
 
                 {/* MOODS / FRIENDS VIEW OVERLAY */}
                 {/* 
-                   It leverages an absolute overlay so it slides smoothly over the main app content. 
-                   We give it a white background so it obscures the home view completely.
+                   It leverages a strictly clamped absolute root so the translate-x animation
+                   doesn't force the browser's viewport width to expand to 200vw, which breaks
+                   fixed layout constraints on iOS and Chrome causing rubber-banding globally.
                 */}
-                <div className={`absolute inset-0 w-full h-full bg-[#ffffff] sm:bg-transparent z-50 transition-transform duration-500 ease-[cubic-bezier(0.2,0.8,0.2,1)] flex flex-col sm:rounded-[3rem] ${s.currentView === 'friends' ? 'translate-x-0 overflow-y-auto no-scrollbar pointer-events-auto' : 'translate-x-[100%] pointer-events-none'}`}>
-                    <div className="absolute bottom-[-5%] right-[-10%] w-[80vw] max-w-[400px] h-[80vw] max-h-[400px] bg-[#EAB0BE]/50 rounded-full blur-[80px] pointer-events-none z-0"></div>
-                    <div className="absolute bottom-[5%] left-[-10%] w-[60vw] max-w-[350px] h-[60vw] max-h-[350px] bg-[#B8E9F3]/50 rounded-full blur-[80px] pointer-events-none z-0"></div>
-                    
-                    <div className="relative z-10 w-full h-full flex flex-col">
-                        <FriendsView onBack={() => s.setCurrentView('home')} />
+                <div className={`absolute inset-0 w-full h-full z-50 overflow-hidden sm:rounded-[3rem] pointer-events-none`}>
+                    <div className={`absolute inset-0 w-full h-full bg-[#ffffff] sm:bg-transparent transition-transform duration-500 ease-[cubic-bezier(0.2,0.8,0.2,1)] flex flex-col ${s.currentView === 'friends' ? 'translate-x-0 pointer-events-auto' : 'translate-x-[100%] pointer-events-none'}`}>
+                        <div className="absolute bottom-[-5%] right-[-10%] w-[80vw] max-w-[400px] h-[80vw] max-h-[400px] bg-[#EAB0BE]/50 rounded-full blur-[80px] pointer-events-none z-0"></div>
+                        <div className="absolute bottom-[5%] left-[-10%] w-[60vw] max-w-[350px] h-[60vw] max-h-[350px] bg-[#B8E9F3]/50 rounded-full blur-[80px] pointer-events-none z-0"></div>
+                        
+                        <div className="relative z-10 w-full h-full flex flex-col">
+                            <FriendsView onBack={() => s.setCurrentView('home')} />
+                        </div>
                     </div>
                 </div>
 
