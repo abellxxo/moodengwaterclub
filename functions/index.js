@@ -55,6 +55,19 @@ exports.sendWaterReminders = functions
           title: notificationTitle,
           body: notificationBody,
         },
+        android: {
+          priority: 'high',
+          notification: {
+            priority: 'max',
+            defaultSound: true,
+            channelId: 'water-reminders',
+          }
+        },
+        apns: {
+          headers: {
+            'apns-priority': '10',
+          }
+        },
         tokens: tokens,
       });
 
