@@ -1,6 +1,5 @@
 // ============================================================
 // UNIFIED SERVICE WORKER — Firebase Messaging + PWA Cache
-// This single file handles both FCM push notifications AND caching
 // ============================================================
 
 importScripts('https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js');
@@ -32,24 +31,33 @@ messaging.onBackgroundMessage((payload) => {
     renotify: true,
     actions: [
       { action: 'open', title: 'Open App' }
-    ]
+    ],
+    data: {
+      url: '/'
+    }
   };
 
-  // self.registration.showNotification(notificationTitle, notificationOptions);
+  return self.registration.showNotification(notificationTitle, notificationOptions);
 });
 
 // Handle notification click — open the app
 self.addEventListener('notificationclick', (event) => {
   event.notification.close();
+
+  const targetUrl = event.notification?.data?.url || '/';
+
   event.waitUntil(
     clients.matchAll({ type: 'window', includeUncontrolled: true }).then((clientList) => {
       for (const client of clientList) {
-        if (client.url.includes('/') && 'focus' in client) {
+        if ('focus' in client) {
+          if ('navigate' in client) {
+            client.navigate(targetUrl);
+          }
           return client.focus();
         }
       }
       if (clients.openWindow) {
-        return clients.openWindow('/');
+        return clients.openWindow(targetUrl);
       }
     })
   );
@@ -58,7 +66,7 @@ self.addEventListener('notificationclick', (event) => {
 // ----------------------------------------------------------
 // PWA CACHE — Install & cache static assets
 // ----------------------------------------------------------
-const CACHE_NAME = 'water-tracker-v13';
+const CACHE_NAME = 'water-tracker-v14';
 const PRECACHE_ASSETS = [
   '/',
   '/index.html',
@@ -91,13 +99,9 @@ self.addEventListener('fetch', (event) => {
   const { request } = event;
   const url = new URL(request.url);
 
-  // Skip non-origin requests (Firebase, Firestore, CDN, etc.)
   if (url.origin !== location.origin) return;
-
-  // Skip API routes
   if (url.pathname.startsWith('/api/')) return;
 
-  // Only cache static assets
   const isStatic = /\.(js|css|png|jpg|jpeg|svg|ico|woff2?)$/.test(url.pathname);
 
   if (request.mode === 'navigate') {
