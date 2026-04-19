@@ -118,16 +118,25 @@ export default function App() {
                                     </svg>
                                 </button>
                             )}
-                            {/* Moods button */}
-                            <button
-                                onClick={() => s.setCurrentView('friends')}
-                                className="w-10 h-10 rounded-full flex items-center justify-center transition-all active:scale-90 bg-[#F2F2F7] text-[#8E8E93] hover:text-[#4a90d9]"
-                                title="Moods"
-                            >
-                                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
-                                    <path strokeLinecap="round" strokeLinejoin="round" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
-                                </svg>
-                            </button>
+                            {/* Moods vs Add Mood button */}
+                            {s.currentView === 'friends' ? (
+                                <button
+                                    onClick={() => document.dispatchEvent(new CustomEvent('showAddMoodSheet'))}
+                                    className="w-10 h-10 rounded-full bg-[#4a90d9] text-white flex items-center justify-center shadow-md shadow-[#4a90d9]/30 active:scale-90 transition-all font-bold text-xl pb-1"
+                                >
+                                    +
+                                </button>
+                            ) : (
+                                <button
+                                    onClick={() => s.setCurrentView('friends')}
+                                    className="w-10 h-10 rounded-full flex items-center justify-center transition-all active:scale-90 bg-[#F2F2F7] text-[#8E8E93] hover:text-[#4a90d9]"
+                                    title="Moods"
+                                >
+                                    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
+                                        <path strokeLinecap="round" strokeLinejoin="round" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+                                    </svg>
+                                </button>
+                            )}
                             <button
                                 onClick={() => s.setCurrentView(prev => prev === 'home' ? 'streak' : 'home')}
                                 className={`w-10 h-10 rounded-full flex items-center justify-center transition-all active:scale-90 ${s.currentView === 'home' ? 'bg-[#6ED8EA]/10 text-[#6ED8EA]' : 'bg-[#F2F2F7] text-[#8E8E93]'}`}
@@ -170,6 +179,14 @@ export default function App() {
                             setShowCalendar={s.setShowCalendar}
                         />
                     </div>
+
+                    {/* MOODS */}
+                    <div className={`absolute inset-0 w-full h-full flex flex-col transition-all duration-500 ease-[cubic-bezier(0.2,0.8,0.2,1)] ${s.currentView === 'friends' ? 'translate-x-0 opacity-100 z-20 pointer-events-auto' : 'translate-x-[100%] opacity-0 z-0 pointer-events-none'}`}>
+                        <div className="absolute inset-0 right-0 w-[40vw] max-w-[200px] h-full bg-[#EAB0BE]/10 rounded-l-full blur-[80px] pointer-events-none z-0"></div>
+                        <div className="relative z-10 w-full h-full flex flex-col pt-4">
+                            <FriendsView onBack={() => s.setCurrentView('home')} />
+                        </div>
+                    </div>
                 </div>
 
                 {/* FLOATING DOCK */}
@@ -205,22 +222,7 @@ export default function App() {
                     </button>
                 </div>
 
-                {/* MOODS / FRIENDS VIEW OVERLAY */}
-                {/* 
-                   It leverages a strictly clamped absolute root so the translate-x animation
-                   doesn't force the browser's viewport width to expand to 200vw, which breaks
-                   fixed layout constraints on iOS and Chrome causing rubber-banding globally.
-                */}
-                <div className={`absolute inset-0 w-full h-full z-50 overflow-hidden sm:rounded-[3rem] pointer-events-none`}>
-                    <div className={`absolute inset-0 w-full h-full bg-[#ffffff] sm:bg-transparent transition-transform duration-500 ease-[cubic-bezier(0.2,0.8,0.2,1)] flex flex-col ${s.currentView === 'friends' ? 'translate-x-0 pointer-events-auto' : 'translate-x-[100%] pointer-events-none'}`}>
-                        <div className="absolute bottom-[-5%] right-[-10%] w-[80vw] max-w-[400px] h-[80vw] max-h-[400px] bg-[#EAB0BE]/50 rounded-full blur-[80px] pointer-events-none z-0"></div>
-                        <div className="absolute bottom-[5%] left-[-10%] w-[60vw] max-w-[350px] h-[60vw] max-h-[350px] bg-[#B8E9F3]/50 rounded-full blur-[80px] pointer-events-none z-0"></div>
-                        
-                        <div className="relative z-10 w-full h-full flex flex-col">
-                            <FriendsView onBack={() => s.setCurrentView('home')} />
-                        </div>
-                    </div>
-                </div>
+
 
             </main>
         </div>

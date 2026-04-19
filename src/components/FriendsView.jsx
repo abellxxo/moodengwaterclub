@@ -317,6 +317,12 @@ export default function FriendsView({ onBack }) {
         loadFriends();
     }, [loadFriends]);
 
+    useEffect(() => {
+        const handleShowAdd = () => setShowAddSheet(true);
+        document.addEventListener('showAddMoodSheet', handleShowAdd);
+        return () => document.removeEventListener('showAddMoodSheet', handleShowAdd);
+    }, []);
+
     // Refresh friends when add sheet closes (user may have created a group)
     const handleAddSheetClose = () => {
         setShowAddSheet(false);
@@ -390,40 +396,6 @@ export default function FriendsView({ onBack }) {
 
     return (
         <>
-            {/* Header */}
-            <header className="pt-[calc(env(safe-area-inset-top)+1rem)] pb-4 px-8 z-30 bg-white/70 backdrop-blur-xl border-b border-gray-100/50 sticky top-0">
-                <div className="flex justify-between items-center h-14">
-                    <div className="flex flex-col justify-center">
-                        <h1 className="text-2xl font-bold tracking-tight text-[#1C1C1E]">Moods</h1>
-                        <p className="text-[#8E8E93] text-[12px] font-medium">
-                            {displayFriends.length > 0
-                                ? `${displayFriends.length} in your club 💧`
-                                : 'Start your club 💧'
-                            }
-                            {useMock && <span className="text-[10px] text-[#FF9500] ml-1">(demo)</span>}
-                        </p>
-                    </div>
-                    <div className="flex items-center gap-2">
-                        {/* Add Mood button */}
-                        <button
-                            onClick={() => setShowAddSheet(true)}
-                            className="w-10 h-10 rounded-full bg-[#4a90d9] text-white flex items-center justify-center shadow-md shadow-[#4a90d9]/30 active:scale-90 transition-all font-bold text-xl pb-1"
-                        >
-                            +
-                        </button>
-                        {/* Close button (X) */}
-                        <button
-                            onClick={onBack}
-                            className="w-10 h-10 rounded-full flex items-center justify-center bg-[#F2F2F7] text-[#8E8E93] active:scale-90 transition-all"
-                        >
-                            <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5">
-                                <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
-                            </svg>
-                        </button>
-                    </div>
-                </div>
-            </header>
-
             {/* Empty state or Carousel */}
             {displayFriends.length === 0 ? (
                 <EmptyState onAdd={() => setShowAddSheet(true)} />
