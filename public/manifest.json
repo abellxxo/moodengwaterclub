@@ -4,6 +4,7 @@
   "description": "Moodeng Waterclub",
   "start_url": "/",
   "display": "standalone",
+  "orientation": "portrait",
   "background_color": "#F2F2F7",
   "theme_color": "#007AFF",
   "icons": [

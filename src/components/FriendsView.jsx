@@ -1,4 +1,5 @@
 import React, { useState, useRef, useEffect, useCallback } from 'react';
+import { createPortal } from 'react-dom';
 import { useAppState } from '../AppContext';
 import { auth } from '../firebase';
 import {
@@ -142,7 +143,7 @@ function AddFriendSheet({ show, onClose, user }) {
 }
 
 // ── Remind Sheet ───────────────────────────────────────────
-function RemindSheet({ show, onClose, friend, onSent, user }) {
+function RemindSheet({ show, onClose, friend, onSent, user, showToastMsg }) {
     const [selectedIdx, setSelectedIdx] = useState(0);
     const [sending, setSending] = useState(false);
 
@@ -183,7 +184,8 @@ function RemindSheet({ show, onClose, friend, onSent, user }) {
 
         // Always mark as sent (UX: don't let API failures block the UI)
         onSent(friend?.id);
-        setTimeout(() => onClose(), 600);
+        if (showToastMsg) showToastMsg('Reminder sent! 💧', true);
+        onClose();
     };
 
     if (!friend) return null;
@@ -362,19 +364,20 @@ export default function FriendsView({ onBack }) {
     }, [displayFriends.length]);
 
     const handleDragStart = (clientX) => {
+        if (displayFriends.length <= 1) return;
         isDragging.current = true;
         dragStartX.current = clientX;
         dragDelta.current = 0;
     };
 
     const handleDragMove = (clientX) => {
-        if (!isDragging.current) return;
+        if (!isDragging.current || displayFriends.length <= 1) return;
         dragDelta.current = clientX - dragStartX.current;
         setDragOffset(dragDelta.current);
     };
 
     const handleDragEnd = () => {
-        if (!isDragging.current) return;
+        if (!isDragging.current || displayFriends.length <= 1) return;
         isDragging.current = false;
         const threshold = 60;
         if (dragDelta.current < -threshold) {
@@ -421,7 +424,7 @@ export default function FriendsView({ onBack }) {
                 <div className="flex-1 relative overflow-hidden">
                     <div
                         ref={containerRef}
-                        className="w-full h-full relative cursor-grab active:cursor-grabbing select-none touch-pan-y"
+                        className={`w-full h-full relative select-none touch-pan-y ${displayFriends.length > 1 ? 'cursor-grab active:cursor-grabbing' : ''}`}
                         onTouchStart={onTouchStart}
                         onTouchMove={onTouchMove}
                         onTouchEnd={onTouchEnd}
@@ -527,31 +530,39 @@ export default function FriendsView({ onBack }) {
                     </div>
 
                     {/* Dot Indicators */}
-                    <div className="absolute bottom-6 left-0 right-0 flex items-center justify-center gap-2 z-20">
-                        {displayFriends.map((_, idx) => (
-                            <button
-                                key={idx}
-                                onClick={() => goTo(idx)}
-                                className={`rounded-full transition-all duration-300 ${
-                                    idx === activeIdx
-                                        ? 'w-6 h-2.5 bg-gradient-to-r from-[#7dd8d8] to-[#4a90d9]'
-                                        : 'w-2.5 h-2.5 bg-[#D1D1D6] hover:bg-[#AEAEB2]'
-                                }`}
-                            />
-                        ))}
-                    </div>
+                    {displayFriends.length > 1 && (
+                        <div className="absolute bottom-6 left-0 right-0 flex items-center justify-center gap-2 z-20">
+                            {displayFriends.map((_, idx) => (
+                                <button
+                                    key={idx}
+                                    onClick={() => goTo(idx)}
+                                    className={`rounded-full transition-all duration-300 ${
+                                        idx === activeIdx
+                                            ? 'w-6 h-2.5 bg-gradient-to-r from-[#7dd8d8] to-[#4a90d9]'
+                                            : 'w-2.5 h-2.5 bg-[#D1D1D6] hover:bg-[#AEAEB2]'
+                                    }`}
+                                />
+                            ))}
+                        </div>
+                    )}
                 </div>
             )}
 
             {/* Bottom Sheets */}
-            <AddFriendSheet show={showAddSheet} onClose={handleAddSheetClose} user={user} />
-            <RemindSheet
-                show={showRemindSheet}
-                onClose={() => setShowRemindSheet(false)}
-                friend={remindTarget}
-                onSent={handleReminderSent}
-                user={user}
-            />
+            {typeof document !== 'undefined' && document.querySelector('main') ? createPortal(
+                <>
+                    <AddFriendSheet show={showAddSheet} onClose={handleAddSheetClose} user={user} />
+                    <RemindSheet
+                        show={showRemindSheet}
+                        onClose={() => setShowRemindSheet(false)}
+                        friend={remindTarget}
+                        onSent={handleReminderSent}
+                        user={user}
+                        showToastMsg={s.showToastMsg}
+                    />
+                </>,
+                document.querySelector('main')
+            ) : null}
         </>
     );
 }
