@@ -1,138 +1,115 @@
 // ============================================================
-// UNIFIED SERVICE WORKER
-// Firebase Messaging + PWA Cache
-// FINAL PRODUCTION VERSION
+// UNIFIED SERVICE WORKER — Firebase Messaging + PWA Cache
+// This single file handles both FCM push notifications AND caching
 // ============================================================
 
-importScripts("https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js");
-importScripts("https://www.gstatic.com/firebasejs/10.12.0/firebase-messaging-compat.js");
+importScripts('https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js');
+importScripts('https://www.gstatic.com/firebasejs/10.12.0/firebase-messaging-compat.js');
 
 firebase.initializeApp({
-  apiKey: "AIzaSyAt7roNCIyeOKjNHx7lZXJ3DFULmCak1uw",
-  authDomain: "water-tracker-kita.firebaseapp.com",
-  projectId: "water-tracker-kita",
-  storageBucket: "water-tracker-kita.firebasestorage.app",
-  messagingSenderId: "1065083698538",
-  appId: "1:1065083698538:web:0198badb0d75388e4db913",
+  apiKey: 'AIzaSyAt7roNCIyeOKjNHx7lZXJ3DFULmCak1uw',
+  authDomain: 'water-tracker-kita.firebaseapp.com',
+  projectId: 'water-tracker-kita',
+  storageBucket: 'water-tracker-kita.firebasestorage.app',
+  messagingSenderId: '1065083698538',
+  appId: '1:1065083698538:web:0198badb0d75388e4db913'
 });
 
 const messaging = firebase.messaging();
 
-// ============================================================
-// FCM background handler
-// ============================================================
+// ----------------------------------------------------------
+// FCM — Handle background messages
+// ----------------------------------------------------------
 messaging.onBackgroundMessage((payload) => {
-  console.log("[firebase-messaging-sw.js] Background message received:", payload);
+  console.log('[firebase-messaging-sw.js] Background message received:', payload);
 
-  const notificationTitle =
-    payload.notification?.title || "💧 Water Reminder";
-
+  const notificationTitle = payload.notification?.title || '💧 Water Reminder';
   const notificationOptions = {
-    body:
-      payload.notification?.body || "Don't forget to drink your water!",
-    icon: "/icon-192.png",
-    badge: "/icon-192.png",
-    tag: payload.notification?.tag || "water-reminder",
+    body: payload.notification?.body || "Don't forget to drink your water!",
+    icon: '/icon-192.png',
+    badge: '/icon-192.png',
+    tag: 'water-reminder',
     renotify: true,
-    requireInteraction: true,
-    data: {
-      url: "/",
-    },
     actions: [
-      { action: "open", title: "Open App" },
-    ],
+      { action: 'open', title: 'Open App' }
+    ]
   };
 
-  return self.registration.showNotification(
-    notificationTitle,
-    notificationOptions
-  );
+  // NOTE: FCM otomatis menampilkan notifikasi jika payload berisi objek 'notification'.
+  // self.registration.showNotification(notificationTitle, notificationOptions);
 });
 
-// ============================================================
-// Notification click handler
-// ============================================================
-self.addEventListener("notificationclick", (event) => {
+// Handle notification click — open the app
+self.addEventListener('notificationclick', (event) => {
   event.notification.close();
-
-  const targetUrl = event.notification?.data?.url || "/";
-
   event.waitUntil(
-    clients.matchAll({ type: "window", includeUncontrolled: true }).then((clientList) => {
+    clients.matchAll({ type: 'window', includeUncontrolled: true }).then((clientList) => {
       for (const client of clientList) {
-        const sameOrigin = client.url.startsWith(self.location.origin);
-
-        if (sameOrigin && "focus" in client) {
-          if ("navigate" in client) {
-            client.navigate(targetUrl);
-          }
+        if (client.url.includes('/') && 'focus' in client) {
           return client.focus();
         }
       }
-
       if (clients.openWindow) {
-        return clients.openWindow(targetUrl);
+        return clients.openWindow('/');
       }
-
-      return undefined;
     })
   );
 });
 
-// ============================================================
-// PWA cache
-// ============================================================
-const CACHE_NAME = "water-tracker-v14";
+// ----------------------------------------------------------
+// PWA CACHE — Install & cache static assets
+// ----------------------------------------------------------
+const CACHE_NAME = 'water-tracker-v13';
 const PRECACHE_ASSETS = [
-  "/",
-  "/index.html",
-  "/manifest.json",
-  "/icon-192.png",
-  "/icon-512.png",
+  '/',
+  '/index.html',
+  '/manifest.json',
+  '/icon-192.png',
+  '/icon-512.png',
 ];
 
-self.addEventListener("install", (event) => {
+self.addEventListener('install', (event) => {
   event.waitUntil(
-    caches
-      .open(CACHE_NAME)
+    caches.open(CACHE_NAME)
       .then((cache) => cache.addAll(PRECACHE_ASSETS))
       .then(() => self.skipWaiting())
   );
 });
 
-self.addEventListener("activate", (event) => {
+self.addEventListener('activate', (event) => {
   event.waitUntil(
-    caches
-      .keys()
+    caches.keys()
       .then((keys) =>
         Promise.all(
-          keys
-            .filter((key) => key !== CACHE_NAME)
-            .map((key) => caches.delete(key))
+          keys.filter((k) => k !== CACHE_NAME).map((k) => caches.delete(k))
         )
       )
       .then(() => self.clients.claim())
   );
 });
 
-self.addEventListener("fetch", (event) => {
+self.addEventListener('fetch', (event) => {
   const { request } = event;
   const url = new URL(request.url);
 
+  // Skip non-origin requests (Firebase, Firestore, CDN, dsb.)
   if (url.origin !== location.origin) return;
-  if (url.pathname.startsWith("/api/")) return;
 
-  const isStatic = /\.(js|css|png|jpg|jpeg|svg|ico|woff2?)$/i.test(url.pathname);
+  // Skip API routes
+  if (url.pathname.startsWith('/api/')) return;
 
-  if (request.mode === "navigate") {
+  // Hanya cache aset statis
+  const isStatic = /\.(js|css|png|jpg|jpeg|svg|ico|woff2?)$/.test(url.pathname);
+
+  if (request.mode === 'navigate') {
     event.respondWith(
       fetch(request)
-        .then((response) => {
-          const clone = response.clone();
-          caches.open(CACHE_NAME).then((cache) => cache.put(request, clone));
-          return response;
+        .then((res) => {
+          const clone = res.clone();
+          caches.open(CACHE_NAME).then((c) => c.put(request, clone));
+          return res;
         })
-        .catch(() => caches.match("/index.html"))
+        .catch(() => caches.match('/index.html'))
     );
     return;
   }
@@ -140,13 +117,12 @@ self.addEventListener("fetch", (event) => {
   event.respondWith(
     caches.match(request).then((cached) => {
       if (cached) return cached;
-
-      return fetch(request).then((response) => {
-        if (response && response.ok && isStatic) {
-          const clone = response.clone();
-          caches.open(CACHE_NAME).then((cache) => cache.put(request, clone));
+      return fetch(request).then((res) => {
+        if (res && res.ok && isStatic) {
+          const clone = res.clone();
+          caches.open(CACHE_NAME).then((c) => c.put(request, clone));
         }
-        return response;
+        return res;
       });
     })
   );
