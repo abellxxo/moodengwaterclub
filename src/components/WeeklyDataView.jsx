@@ -89,9 +89,17 @@ export default function WeeklyDataView({ history, goal }) {
                             preserveAspectRatio="xMidYMid meet"
                         >
                             <defs>
+                                {/* Area fill: pink → blue → transparent */}
                                 <linearGradient id="areaGrad" x1="0" y1="0" x2="0" y2="1">
-                                    <stop offset="0%" stopColor="#6ED8EA" stopOpacity="0.25" />
+                                    <stop offset="0%" stopColor="#EAB0BE" stopOpacity="0.35" />
+                                    <stop offset="50%" stopColor="#B8E9F3" stopOpacity="0.2" />
                                     <stop offset="100%" stopColor="#6ED8EA" stopOpacity="0.02" />
+                                </linearGradient>
+                                {/* Line stroke: pink → cyan */}
+                                <linearGradient id="lineGrad" x1="0" y1="0" x2="1" y2="0">
+                                    <stop offset="0%" stopColor="#EAB0BE" />
+                                    <stop offset="50%" stopColor="#B8E9F3" />
+                                    <stop offset="100%" stopColor="#6ED8EA" />
                                 </linearGradient>
                             </defs>
 
@@ -102,7 +110,7 @@ export default function WeeklyDataView({ history, goal }) {
                             <path
                                 d={linePath}
                                 fill="none"
-                                stroke="#6ED8EA"
+                                stroke="url(#lineGrad)"
                                 strokeWidth="2.5"
                                 strokeLinecap="round"
                                 strokeLinejoin="round"
@@ -147,8 +155,8 @@ export default function WeeklyDataView({ history, goal }) {
                                         stroke="rgba(255,255,255,0.1)"
                                         strokeWidth="1"
                                     />
-                                    {/* Outer glow ring */}
-                                    <circle cx={activePoint.x} cy={activePoint.y} r="10" fill="rgba(110,216,234,0.18)" />
+                                    {/* Outer glow ring — pink tint */}
+                                    <circle cx={activePoint.x} cy={activePoint.y} r="10" fill="rgba(234,176,190,0.3)" />
                                     {/* White dot */}
                                     <circle cx={activePoint.x} cy={activePoint.y} r="5" fill="white" />
 
@@ -178,7 +186,7 @@ export default function WeeklyDataView({ history, goal }) {
                             {/* Inert dots for each data point */}
                             {points.map((pt, i) => (
                                 pt.ml > 0 && i !== activeIdx ? (
-                                    <circle key={i} cx={pt.x} cy={pt.y} r="3" fill="rgba(110,216,234,0.6)" />
+                                    <circle key={i} cx={pt.x} cy={pt.y} r="3" fill="rgba(184,233,243,0.7)" />
                                 ) : null
                             ))}
                         </svg>
