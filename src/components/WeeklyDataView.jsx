@@ -56,21 +56,27 @@ export default function WeeklyDataView({ history, goal }) {
     const chartW = W - PAD_X * 2;
     const chartH = H - PAD_Y * 2;
 
+    const allZero = weekData.every(d => d.ml === 0);
     const maxVal = Math.max(...weekData.map(d => d.ml), goal || 1500, 1);
 
     const points = weekData.map((d, i) => ({
         x: PAD_X + (i / 6) * chartW,
-        y: PAD_Y + chartH - (d.ml / maxVal) * chartH,
+        // clamp so curve never goes below chart floor
+        y: allZero
+            ? PAD_Y + chartH
+            : Math.min(PAD_Y + chartH, Math.max(PAD_Y, PAD_Y + chartH - (d.ml / maxVal) * chartH)),
         ml: d.ml,
     }));
 
-    const linePath = catmullRomToBezier(points);
+    const linePath = allZero ? '' : catmullRomToBezier(points);
 
     // Area fill path (close shape at bottom)
     const areaPath = linePath
-        + ` L ${points[points.length - 1].x},${PAD_Y + chartH} L ${points[0].x},${PAD_Y + chartH} Z`;
+        ? linePath + ` L ${points[points.length - 1].x},${PAD_Y + chartH} L ${points[0].x},${PAD_Y + chartH} Z`
+        : '';
 
     const activePoint = activeIdx !== null ? points[activeIdx] : null;
+    const flatY = PAD_Y + chartH; // baseline y for zero state
 
     return (
         <div className="w-full flex flex-col gap-4 pb-6">
@@ -106,18 +112,30 @@ export default function WeeklyDataView({ history, goal }) {
                                 </linearGradient>
                             </defs>
 
-                            {/* Area fill */}
-                            <path d={areaPath} fill={`url(#${uid}-areaGrad)`} />
+                            {/* Area fill — only when there's data */}
+                            {!allZero && <path d={areaPath} fill={`url(#${uid}-areaGrad)`} />}
 
-                            {/* Line */}
-                            <path
-                                d={linePath}
-                                fill="none"
-                                stroke={`url(#${uid}-lineGrad)`}
-                                strokeWidth="2.5"
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
-                            />
+                            {/* Line — flat when all zero, curved when data exists */}
+                            {allZero ? (
+                                <line
+                                    x1={PAD_X}
+                                    y1={flatY}
+                                    x2={W - PAD_X}
+                                    y2={flatY}
+                                    stroke="rgba(255,255,255,0.2)"
+                                    strokeWidth="2"
+                                    strokeDasharray="4 4"
+                                />
+                            ) : (
+                                <path
+                                    d={linePath}
+                                    fill="none"
+                                    stroke={`url(#${uid}-lineGrad)`}
+                                    strokeWidth="2.5"
+                                    strokeLinecap="round"
+                                    strokeLinejoin="round"
+                                />
+                            )}
 
                             {/* Goal line (subtle dashed) */}
                             {goal > 0 && (
