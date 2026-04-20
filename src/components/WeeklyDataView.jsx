@@ -20,6 +20,8 @@ function catmullRomToBezier(points) {
 
 export default function WeeklyDataView({ history, goal }) {
     const DAY_LABELS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+    // Unique IDs to avoid SVG gradient ID collisions in the DOM
+    const uid = 'wdv';
 
     const weekData = useMemo(() => {
         const today = new Date();
@@ -89,14 +91,14 @@ export default function WeeklyDataView({ history, goal }) {
                             preserveAspectRatio="xMidYMid meet"
                         >
                             <defs>
-                                {/* Area fill: pink → blue → transparent */}
-                                <linearGradient id="areaGrad" x1="0" y1="0" x2="0" y2="1">
-                                    <stop offset="0%" stopColor="#EAB0BE" stopOpacity="0.35" />
-                                    <stop offset="50%" stopColor="#B8E9F3" stopOpacity="0.2" />
+                                {/* Area fill: pink → blue → transparent (top to bottom) */}
+                                <linearGradient id={`${uid}-areaGrad`} x1="0" y1="0" x2="0" y2="1">
+                                    <stop offset="0%" stopColor="#EAB0BE" stopOpacity="0.4" />
+                                    <stop offset="55%" stopColor="#B8E9F3" stopOpacity="0.18" />
                                     <stop offset="100%" stopColor="#6ED8EA" stopOpacity="0.02" />
                                 </linearGradient>
-                                {/* Line stroke: pink → cyan */}
-                                <linearGradient id="lineGrad" x1="0" y1="0" x2="1" y2="0">
+                                {/* Line stroke: pink → cyan, using real chart x coords */}
+                                <linearGradient id={`${uid}-lineGrad`} gradientUnits="userSpaceOnUse" x1={PAD_X} y1="0" x2={W - PAD_X} y2="0">
                                     <stop offset="0%" stopColor="#EAB0BE" />
                                     <stop offset="50%" stopColor="#B8E9F3" />
                                     <stop offset="100%" stopColor="#6ED8EA" />
@@ -104,13 +106,13 @@ export default function WeeklyDataView({ history, goal }) {
                             </defs>
 
                             {/* Area fill */}
-                            <path d={areaPath} fill="url(#areaGrad)" />
+                            <path d={areaPath} fill={`url(#${uid}-areaGrad)`} />
 
                             {/* Line */}
                             <path
                                 d={linePath}
                                 fill="none"
-                                stroke="url(#lineGrad)"
+                                stroke={`url(#${uid}-lineGrad)`}
                                 strokeWidth="2.5"
                                 strokeLinecap="round"
                                 strokeLinejoin="round"
