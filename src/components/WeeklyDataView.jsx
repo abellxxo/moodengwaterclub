@@ -89,6 +89,7 @@ export default function WeeklyDataView({ history, goal }) {
                             viewBox={`0 0 ${W} ${H}`}
                             className="w-full h-auto"
                             preserveAspectRatio="xMidYMid meet"
+                            style={{ overflow: 'visible' }}
                         >
                             <defs>
                                 {/* Area fill: pink → blue → transparent (top to bottom) */}
