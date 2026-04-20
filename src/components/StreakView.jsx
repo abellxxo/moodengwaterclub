@@ -1,6 +1,6 @@
 import React from 'react';
 
-export default function StreakView({ streakCount, isTodayGoalMet, weekDays, isClaiming, handleClaimReward, setShowCalendar }) {
+export default function StreakView({ streakCount, isTodayGoalMet, weekDays, isClaiming, handleClaimReward, setShowCalendar, onShowWeeklyData }) {
     return (
         <>
             {/* Streak Card */}
@@ -44,6 +44,29 @@ export default function StreakView({ streakCount, isTodayGoalMet, weekDays, isCl
                         </div>
                     ))}
                 </div>
+            </div>
+
+            {/* Weekly Data Card */}
+            <div className="w-full mt-5">
+                <button
+                    onClick={onShowWeeklyData}
+                    className="w-full bg-white rounded-[2rem] p-4 shadow-[0_5px_20px_rgba(0,0,0,0.03)] border border-gray-100 flex items-center justify-between transition-all active:scale-95"
+                >
+                    <div className="flex items-center gap-4">
+                        <div className="w-12 h-12 rounded-full flex items-center justify-center text-[22px]" style={{ background: 'linear-gradient(135deg, #1e1b3a, #2d2660)' }}>
+                            📊
+                        </div>
+                        <div className="text-left">
+                            <h4 className="text-[#1C1C1E] font-bold text-[15px]">Weekly Data</h4>
+                            <p className="text-[#8E8E93] text-[12px] font-medium mt-0.5">View your 7-day chart</p>
+                        </div>
+                    </div>
+                    <div className="text-[#C7C7CC] pr-2">
+                        <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                            <path fillRule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clipRule="evenodd" />
+                        </svg>
+                    </div>
+                </button>
             </div>
 
             {/* Claim Reward */}
