@@ -9,10 +9,16 @@ function catmullRomToBezier(points, bottomClampY) {
         const p1 = points[i];
         const p2 = points[i + 1];
         const p3 = points[Math.min(i + 2, points.length - 1)];
-        let cp1x = p1.x + (p2.x - p0.x) / 6;
-        let cp1y = p1.y + (p2.y - p0.y) / 6;
-        let cp2x = p2.x - (p3.x - p1.x) / 6;
-        let cp2y = p2.y - (p3.y - p1.y) / 6;
+        const tension = 0.25; // Increase tension for a smoother, rounder curve
+        let cp1x = p1.x + (p2.x - p0.x) * tension;
+        let cp1y = p1.y + (p2.y - p0.y) * tension;
+        let cp2x = p2.x - (p3.x - p1.x) * tension;
+        let cp2y = p2.y - (p3.y - p1.y) * tension;
+
+        // Prevent control points from overlapping horizontally (avoids backward loops)
+        const maxDx = (p2.x - p1.x) / 2;
+        if (cp1x - p1.x > maxDx) cp1x = p1.x + maxDx;
+        if (p2.x - cp2x > maxDx) cp2x = p2.x - maxDx;
 
         // Prevent curve from dipping below chart baseline (overshoot)
         if (bottomClampY !== undefined) {
