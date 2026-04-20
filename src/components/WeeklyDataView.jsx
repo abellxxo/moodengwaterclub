@@ -111,12 +111,12 @@ export default function WeeklyDataView({ history, goal }) {
     return (
         <div className="w-full flex flex-col gap-4 pb-6">
 
-                {/* DARK CHART CARD */}
-                <div className="w-full rounded-[1.5rem] sm:rounded-[2.5rem] p-4 sm:p-6 shadow-[0_20px_60px_rgba(30,27,58,0.25)]" style={{ background: 'linear-gradient(145deg, #1e1b3a 0%, #2d2660 100%)' }}>
-                    <p className="text-white/50 text-[11px] font-bold uppercase tracking-widest mb-1">This Week</p>
-                    <p className="text-white text-[22px] font-bold mb-5">
+                {/* CHART CARD */}
+                <div className="w-full bg-white rounded-[1.5rem] sm:rounded-[2.5rem] p-4 sm:p-6 shadow-[0_5px_25px_rgba(0,0,0,0.04)] border border-gray-100">
+                    <p className="text-[#8E8E93] text-[11px] font-bold uppercase tracking-widest mb-1">This Week</p>
+                    <p className="text-[#1C1C1E] text-[22px] font-bold mb-5">
                         {weekData.reduce((s, d) => s + d.ml, 0).toLocaleString()}
-                        <span className="text-white/50 text-[14px] font-medium ml-1">ml total</span>
+                        <span className="text-[#8E8E93] text-[14px] font-medium ml-1">ml total</span>
                     </p>
 
                     {/* SVG Chart */}
@@ -152,7 +152,7 @@ export default function WeeklyDataView({ history, goal }) {
                                     y1={flatY}
                                     x2={W - PAD_X}
                                     y2={flatY}
-                                    stroke="rgba(255,255,255,0.2)"
+                                    stroke="rgba(0,0,0,0.1)"
                                     strokeWidth="2"
                                     strokeDasharray="4 4"
                                 />
@@ -174,7 +174,7 @@ export default function WeeklyDataView({ history, goal }) {
                                     y1={PAD_Y + chartH - (goal / maxVal) * chartH}
                                     x2={W - PAD_X}
                                     y2={PAD_Y + chartH - (goal / maxVal) * chartH}
-                                    stroke="rgba(255,255,255,0.12)"
+                                    stroke="rgba(0,0,0,0.06)"
                                     strokeWidth="1"
                                     strokeDasharray="4 4"
                                 />
@@ -203,13 +203,13 @@ export default function WeeklyDataView({ history, goal }) {
                                         y1={PAD_Y}
                                         x2={activePoint.x}
                                         y2={PAD_Y + chartH}
-                                        stroke="rgba(255,255,255,0.1)"
+                                        stroke="rgba(0,0,0,0.05)"
                                         strokeWidth="1"
                                     />
                                     {/* Outer glow ring — pink tint */}
                                     <circle cx={activePoint.x} cy={activePoint.y} r="10" fill="rgba(234,176,190,0.3)" />
-                                    {/* White dot */}
-                                    <circle cx={activePoint.x} cy={activePoint.y} r="5" fill="white" />
+                                    {/* Core dot */}
+                                    <circle cx={activePoint.x} cy={activePoint.y} r="5" fill="#EAB0BE" stroke="white" strokeWidth="1.5" />
 
                                     {/* Tooltip pill — clamp so it doesn't go off-edge */}
                                     {(() => {
@@ -237,7 +237,7 @@ export default function WeeklyDataView({ history, goal }) {
                             {/* Inert dots for each data point */}
                             {points.map((pt, i) => (
                                 pt.ml > 0 && i !== activeIdx ? (
-                                    <circle key={i} cx={pt.x} cy={pt.y} r="3" fill="rgba(184,233,243,0.7)" />
+                                    <circle key={i} cx={pt.x} cy={pt.y} r="3" fill="#B8E9F3" />
                                 ) : null
                             ))}
                         </svg>
@@ -249,7 +249,7 @@ export default function WeeklyDataView({ history, goal }) {
                             <button
                                 key={i}
                                 onClick={() => setActiveIdx(i)}
-                                className={`text-[10px] uppercase tracking-wider transition-all active:scale-90 flex-1 text-center ${i === activeIdx ? 'text-white font-bold' : 'text-white/35 font-medium'}`}
+                                className={`text-[10px] uppercase tracking-wider transition-all active:scale-90 flex-1 text-center ${i === activeIdx ? 'text-[#1C1C1E] font-bold' : 'text-[#8E8E93] font-medium'}`}
                             >
                                 {d.label}
                             </button>
