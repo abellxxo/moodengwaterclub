@@ -1,33 +1,49 @@
 import React, { useMemo, useState } from 'react';
 
-// Catmull-Rom to Bezier smooth curve helper
-function catmullRomToBezier(points, bottomClampY) {
+// Monotone Cubic Interpolation (Fritsch-Carlson) for a perfectly smooth curve that never overshoots
+function monotoneCubicToBezier(points) {
     if (points.length < 2) return '';
-    const d = [`M ${points[0].x},${points[0].y}`];
-    for (let i = 0; i < points.length - 1; i++) {
-        const p0 = points[Math.max(i - 1, 0)];
-        const p1 = points[i];
-        const p2 = points[i + 1];
-        const p3 = points[Math.min(i + 2, points.length - 1)];
-        const tension = 0.25; // Increase tension for a smoother, rounder curve
-        let cp1x = p1.x + (p2.x - p0.x) * tension;
-        let cp1y = p1.y + (p2.y - p0.y) * tension;
-        let cp2x = p2.x - (p3.x - p1.x) * tension;
-        let cp2y = p2.y - (p3.y - p1.y) * tension;
-
-        // Prevent control points from overlapping horizontally (avoids backward loops)
-        const maxDx = (p2.x - p1.x) / 2;
-        if (cp1x - p1.x > maxDx) cp1x = p1.x + maxDx;
-        if (p2.x - cp2x > maxDx) cp2x = p2.x - maxDx;
-
-        // Prevent curve from dipping below chart baseline (overshoot)
-        if (bottomClampY !== undefined) {
-            cp1y = Math.min(bottomClampY, cp1y);
-            cp2y = Math.min(bottomClampY, cp2y);
-        }
-
-        d.push(`C ${cp1x},${cp1y} ${cp2x},${cp2y} ${p2.x},${p2.y}`);
+    const n = points.length;
+    const dx = [], dy = [], m = [];
+    
+    // Calculate secant slopes
+    for (let i = 0; i < n - 1; i++) {
+        dx.push(points[i+1].x - points[i].x);
+        dy.push(points[i+1].y - points[i].y);
+        m.push(dx[i] !== 0 ? dy[i] / dx[i] : 0);
     }
+    
+    // Calculate tangents at each point
+    const t = new Array(n).fill(0);
+    t[0] = m[0];
+    t[n - 1] = m[n - 2];
+    
+    for (let i = 1; i < n - 1; i++) {
+        // If secant slopes change sign or either is zero, local extremum (tangent = 0)
+        if (m[i-1] * m[i] <= 0) {
+            t[i] = 0;
+        } else {
+            // Harmonic mean properly preserves monotonicity without kinks
+            t[i] = 2 / (1 / m[i-1] + 1 / m[i]);
+        }
+    }
+    
+    const d = [`M ${points[0].x},${points[0].y}`];
+    
+    // Construct bezier segments
+    for (let i = 0; i < n - 1; i++) {
+        const p0 = points[i];
+        const p1 = points[i+1];
+        
+        const cp1x = p0.x + dx[i] / 3;
+        const cp1y = p0.y + t[i] * dx[i] / 3;
+        
+        const cp2x = p1.x - dx[i] / 3;
+        const cp2y = p1.y - t[i+1] * dx[i] / 3;
+        
+        d.push(`C ${cp1x},${cp1y} ${cp2x},${cp2y} ${p1.x},${p1.y}`);
+    }
+    
     return d.join(' ');
 }
 
@@ -82,7 +98,8 @@ export default function WeeklyDataView({ history, goal }) {
     }));
 
     const flatY = PAD_Y + chartH; // baseline y for zero state
-    const linePath = allZero ? '' : catmullRomToBezier(points, flatY);
+    // Monotone cubic algorithm implicitly prevents all overshoots
+    const linePath = allZero ? '' : monotoneCubicToBezier(points);
 
     // Area fill path (close shape at bottom)
     const areaPath = linePath
