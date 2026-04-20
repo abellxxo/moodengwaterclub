@@ -74,7 +74,7 @@ export default function WeeklyDataView({ history, goal }) {
         <div className="w-full flex flex-col gap-4 pb-6">
 
                 {/* DARK CHART CARD */}
-                <div className="w-full rounded-[2.5rem] p-6 shadow-[0_20px_60px_rgba(30,27,58,0.25)]" style={{ background: 'linear-gradient(145deg, #1e1b3a 0%, #2d2660 100%)' }}>
+                <div className="w-full rounded-[1.5rem] sm:rounded-[2.5rem] p-4 sm:p-6 shadow-[0_20px_60px_rgba(30,27,58,0.25)]" style={{ background: 'linear-gradient(145deg, #1e1b3a 0%, #2d2660 100%)' }}>
                     <p className="text-white/50 text-[11px] font-bold uppercase tracking-widest mb-1">This Week</p>
                     <p className="text-white text-[22px] font-bold mb-5">
                         {weekData.reduce((s, d) => s + d.ml, 0).toLocaleString()}
@@ -85,8 +85,8 @@ export default function WeeklyDataView({ history, goal }) {
                     <div className="w-full relative" style={{ touchAction: 'none' }}>
                         <svg
                             viewBox={`0 0 ${W} ${H}`}
-                            className="w-full"
-                            style={{ height: H, overflow: 'visible' }}
+                            className="w-full h-auto"
+                            preserveAspectRatio="xMidYMid meet"
                         >
                             <defs>
                                 <linearGradient id="areaGrad" x1="0" y1="0" x2="0" y2="1">
@@ -190,8 +190,7 @@ export default function WeeklyDataView({ history, goal }) {
                             <button
                                 key={i}
                                 onClick={() => setActiveIdx(i)}
-                                className={`text-[10px] uppercase tracking-wider transition-all active:scale-90 ${i === activeIdx ? 'text-white font-bold' : 'text-white/35 font-medium'}`}
-                                style={{ minWidth: 32 }}
+                                className={`text-[10px] uppercase tracking-wider transition-all active:scale-90 flex-1 text-center ${i === activeIdx ? 'text-white font-bold' : 'text-white/35 font-medium'}`}
                             >
                                 {d.label}
                             </button>
@@ -202,7 +201,7 @@ export default function WeeklyDataView({ history, goal }) {
                 {/* DAILY BREAKDOWN LIST */}
                 <div className="w-full">
                     <h3 className="text-[#1C1C1E] font-bold text-[15px] mb-3 ml-1">Daily Breakdown</h3>
-                    <div className="bg-white rounded-[2rem] shadow-[0_5px_25px_rgba(0,0,0,0.04)] border border-gray-100 overflow-hidden">
+                    <div className="bg-white rounded-[1.5rem] sm:rounded-[2rem] shadow-[0_5px_25px_rgba(0,0,0,0.04)] border border-gray-100 overflow-hidden">
                         {weekData.map((d, i) => {
                             const pct = Math.min((d.ml / (goal || 1500)) * 100, 100);
                             const isToday = d.dateStr === new Date().toLocaleDateString('en-CA');
