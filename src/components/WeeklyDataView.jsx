@@ -18,7 +18,7 @@ function catmullRomToBezier(points) {
     return d.join(' ');
 }
 
-export default function WeeklyDataView({ onBack, history, goal }) {
+export default function WeeklyDataView({ history, goal }) {
     const DAY_LABELS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
 
     const weekData = useMemo(() => {
@@ -71,25 +71,7 @@ export default function WeeklyDataView({ onBack, history, goal }) {
     const activePoint = activeIdx !== null ? points[activeIdx] : null;
 
     return (
-        <div className="absolute inset-0 w-full h-full flex flex-col">
-            {/* HEADER — independent, matches global header style */}
-            <div className="pt-[calc(env(safe-area-inset-top)+1rem)] pb-4 px-8 bg-white/80 backdrop-blur-xl border-b border-gray-100/50 flex-shrink-0 flex items-center justify-between" style={{ minHeight: 'calc(env(safe-area-inset-top) + 72px)' }}>
-                <div>
-                    <h1 className="text-2xl font-bold tracking-tight text-[#1C1C1E]">Weekly Data</h1>
-                    <p className="text-[#8E8E93] text-[12px] font-medium">This week's hydration</p>
-                </div>
-                <button
-                    onClick={onBack}
-                    className="w-10 h-10 rounded-full bg-[#F2F2F7] text-[#8E8E93] flex items-center justify-center active:scale-90 transition-all"
-                >
-                    <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5">
-                        <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
-                    </svg>
-                </button>
-            </div>
-
-            {/* SCROLLABLE CONTENT */}
-            <div className="flex-1 overflow-y-auto no-scrollbar px-5 pb-10 pt-2 flex flex-col gap-4">
+        <div className="w-full flex flex-col gap-4 pb-6">
 
                 {/* DARK CHART CARD */}
                 <div className="w-full rounded-[2.5rem] p-6 shadow-[0_20px_60px_rgba(30,27,58,0.25)]" style={{ background: 'linear-gradient(145deg, #1e1b3a 0%, #2d2660 100%)' }}>
@@ -249,7 +231,6 @@ export default function WeeklyDataView({ onBack, history, goal }) {
                         })}
                     </div>
                 </div>
-            </div>
         </div>
     );
 }

@@ -140,7 +140,10 @@ export default function App() {
                     <div className="flex justify-between items-center h-14">
                         <div>
                             <h1 className="text-2xl font-bold tracking-tight text-[#1C1C1E]">
-                                {s.currentView === 'home' ? 'Moodeng Water' : (s.currentView === 'streak' ? 'Streak' : 'Moods')}
+                                {s.currentView === 'home' ? 'Moodeng Water'
+                                    : s.currentView === 'streak' ? 'Streak'
+                                    : s.currentView === 'weeklyData' ? 'Weekly Data'
+                                    : 'Moods'}
                             </h1>
                             <p className="text-[#8E8E93] text-[12px] font-medium flex items-center gap-1.5">
                                 {(s.user.displayName?.split(' ')[0] || 'User').substring(0, 10)}'s Tracker
@@ -150,50 +153,64 @@ export default function App() {
                             </p>
                         </div>
                         <div className="flex items-center gap-2">
-                            {s.notifPermission !== 'granted' && (
+                            {/* Weekly Data — X goes back to streak */}
+                            {s.currentView === 'weeklyData' ? (
                                 <button
-                                    onClick={s.requestNotificationPermission}
-                                    className="w-10 h-10 rounded-full flex items-center justify-center transition-all active:scale-90 bg-[#EAB0BE]/10 text-[#EAB0BE] animate-pulse"
-                                    title="Enable notifications"
+                                    onClick={() => s.setCurrentView('streak')}
+                                    className="w-10 h-10 rounded-full bg-[#F2F2F7] text-[#8E8E93] flex items-center justify-center active:scale-90 transition-all"
                                 >
-                                    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
-                                        <path strokeLinecap="round" strokeLinejoin="round" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
-                                    </svg>
-                                </button>
-                            )}
-                            {/* Moods vs Add Mood button */}
-                            {s.currentView === 'friends' ? (
-                                <button
-                                    onClick={() => document.dispatchEvent(new CustomEvent('showAddMoodSheet'))}
-                                    className="w-10 h-10 rounded-full bg-[#4a90d9] text-white flex items-center justify-center shadow-md shadow-[#4a90d9]/30 active:scale-90 transition-all font-bold text-xl pb-1"
-                                >
-                                    +
-                                </button>
-                            ) : (
-                                <button
-                                    onClick={() => s.setCurrentView('friends')}
-                                    className="w-10 h-10 rounded-full flex items-center justify-center transition-all active:scale-90 bg-[#F2F2F7] text-[#8E8E93] hover:text-[#4a90d9]"
-                                    title="Moods"
-                                >
-                                    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
-                                        <path strokeLinecap="round" strokeLinejoin="round" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
-                                    </svg>
-                                </button>
-                            )}
-                            <button
-                                onClick={() => s.setCurrentView(prev => prev === 'home' ? 'streak' : 'home')}
-                                className={`w-10 h-10 rounded-full flex items-center justify-center transition-all active:scale-90 ${s.currentView === 'home' ? 'bg-[#6ED8EA]/10 text-[#6ED8EA]' : 'bg-[#F2F2F7] text-[#8E8E93]'}`}
-                            >
-                                {s.currentView === 'home' ? (
-                                    <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" viewBox="0 0 24 24" fill="currentColor">
-                                        <path d="M12 21.5C7.58172 21.5 4 17.9183 4 13.5C4 9.61058 8.87326 3.89886 11.2335 1.3412C11.6421 0.898491 12.3579 0.898491 12.7665 1.3412C15.1267 3.89886 20 9.61058 20 13.5C20 17.9183 16.4183 21.5 12 21.5Z" />
-                                    </svg>
-                                ) : (
                                     <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5">
                                         <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
                                     </svg>
-                                )}
-                            </button>
+                                </button>
+                            ) : (
+                                <>
+                                    {s.notifPermission !== 'granted' && (
+                                        <button
+                                            onClick={s.requestNotificationPermission}
+                                            className="w-10 h-10 rounded-full flex items-center justify-center transition-all active:scale-90 bg-[#EAB0BE]/10 text-[#EAB0BE] animate-pulse"
+                                            title="Enable notifications"
+                                        >
+                                            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
+                                                <path strokeLinecap="round" strokeLinejoin="round" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
+                                            </svg>
+                                        </button>
+                                    )}
+                                    {/* Moods vs Add Mood button */}
+                                    {s.currentView === 'friends' ? (
+                                        <button
+                                            onClick={() => document.dispatchEvent(new CustomEvent('showAddMoodSheet'))}
+                                            className="w-10 h-10 rounded-full bg-[#4a90d9] text-white flex items-center justify-center shadow-md shadow-[#4a90d9]/30 active:scale-90 transition-all font-bold text-xl pb-1"
+                                        >
+                                            +
+                                        </button>
+                                    ) : (
+                                        <button
+                                            onClick={() => s.setCurrentView('friends')}
+                                            className="w-10 h-10 rounded-full flex items-center justify-center transition-all active:scale-90 bg-[#F2F2F7] text-[#8E8E93] hover:text-[#4a90d9]"
+                                            title="Moods"
+                                        >
+                                            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
+                                                <path strokeLinecap="round" strokeLinejoin="round" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+                                            </svg>
+                                        </button>
+                                    )}
+                                    <button
+                                        onClick={() => s.setCurrentView(prev => prev === 'home' ? 'streak' : 'home')}
+                                        className={`w-10 h-10 rounded-full flex items-center justify-center transition-all active:scale-90 ${s.currentView === 'home' ? 'bg-[#6ED8EA]/10 text-[#6ED8EA]' : 'bg-[#F2F2F7] text-[#8E8E93]'}`}
+                                    >
+                                        {s.currentView === 'home' ? (
+                                            <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" viewBox="0 0 24 24" fill="currentColor">
+                                                <path d="M12 21.5C7.58172 21.5 4 17.9183 4 13.5C4 9.61058 8.87326 3.89886 11.2335 1.3412C11.6421 0.898491 12.3579 0.898491 12.7665 1.3412C15.1267 3.89886 20 9.61058 20 13.5C20 17.9183 16.4183 21.5 12 21.5Z" />
+                                            </svg>
+                                        ) : (
+                                            <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5">
+                                                <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+                                            </svg>
+                                        )}
+                                    </button>
+                                </>
+                            )}
                         </div>
                     </div>
                 </header>
@@ -225,9 +242,8 @@ export default function App() {
                     </div>
 
                     {/* WEEKLY DATA */}
-                    <div className={`absolute inset-0 w-full h-full flex flex-col bg-white transition-all duration-500 ease-[cubic-bezier(0.2,0.8,0.2,1)] ${s.currentView === 'weeklyData' ? 'translate-x-0 opacity-100 z-[60] pointer-events-auto' : 'translate-x-[100%] opacity-0 z-0 pointer-events-none'}`}>
+                    <div className={`absolute inset-0 w-full h-full overflow-y-auto no-scrollbar flex flex-col items-center pt-4 pb-10 px-5 transition-all duration-500 ease-[cubic-bezier(0.2,0.8,0.2,1)] ${s.currentView === 'weeklyData' ? 'translate-x-0 opacity-100 z-10' : 'translate-x-[100%] opacity-0 z-0 pointer-events-none'}`}>
                         <WeeklyDataView
-                            onBack={() => s.setCurrentView('streak')}
                             history={s.userData.history}
                             goal={s.userData.goal}
                         />
