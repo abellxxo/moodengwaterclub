@@ -1,7 +1,7 @@
 import React, { useMemo, useState } from 'react';
 
 // Catmull-Rom to Bezier smooth curve helper
-function catmullRomToBezier(points) {
+function catmullRomToBezier(points, bottomClampY) {
     if (points.length < 2) return '';
     const d = [`M ${points[0].x},${points[0].y}`];
     for (let i = 0; i < points.length - 1; i++) {
@@ -9,10 +9,17 @@ function catmullRomToBezier(points) {
         const p1 = points[i];
         const p2 = points[i + 1];
         const p3 = points[Math.min(i + 2, points.length - 1)];
-        const cp1x = p1.x + (p2.x - p0.x) / 6;
-        const cp1y = p1.y + (p2.y - p0.y) / 6;
-        const cp2x = p2.x - (p3.x - p1.x) / 6;
-        const cp2y = p2.y - (p3.y - p1.y) / 6;
+        let cp1x = p1.x + (p2.x - p0.x) / 6;
+        let cp1y = p1.y + (p2.y - p0.y) / 6;
+        let cp2x = p2.x - (p3.x - p1.x) / 6;
+        let cp2y = p2.y - (p3.y - p1.y) / 6;
+
+        // Prevent curve from dipping below chart baseline (overshoot)
+        if (bottomClampY !== undefined) {
+            cp1y = Math.min(bottomClampY, cp1y);
+            cp2y = Math.min(bottomClampY, cp2y);
+        }
+
         d.push(`C ${cp1x},${cp1y} ${cp2x},${cp2y} ${p2.x},${p2.y}`);
     }
     return d.join(' ');
@@ -68,15 +75,15 @@ export default function WeeklyDataView({ history, goal }) {
         ml: d.ml,
     }));
 
-    const linePath = allZero ? '' : catmullRomToBezier(points);
+    const flatY = PAD_Y + chartH; // baseline y for zero state
+    const linePath = allZero ? '' : catmullRomToBezier(points, flatY);
 
     // Area fill path (close shape at bottom)
     const areaPath = linePath
-        ? linePath + ` L ${points[points.length - 1].x},${PAD_Y + chartH} L ${points[0].x},${PAD_Y + chartH} Z`
+        ? linePath + ` L ${points[points.length - 1].x},${flatY} L ${points[0].x},${flatY} Z`
         : '';
 
     const activePoint = activeIdx !== null ? points[activeIdx] : null;
-    const flatY = PAD_Y + chartH; // baseline y for zero state
 
     return (
         <div className="w-full flex flex-col gap-4 pb-6">
@@ -90,10 +97,10 @@ export default function WeeklyDataView({ history, goal }) {
                     </p>
 
                     {/* SVG Chart */}
-                    <div className="w-full relative" style={{ touchAction: 'none' }}>
+                    <div className="w-full relative block" style={{ touchAction: 'none', aspectRatio: '320/140' }}>
                         <svg
                             viewBox={`0 0 ${W} ${H}`}
-                            className="w-full h-auto"
+                            className="absolute inset-0 w-full h-full"
                             preserveAspectRatio="xMidYMid meet"
                             style={{ overflow: 'visible' }}
                         >
