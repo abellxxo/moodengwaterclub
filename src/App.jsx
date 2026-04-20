@@ -225,7 +225,7 @@ export default function App() {
                     </div>
 
                     {/* WEEKLY DATA */}
-                    <div className={`absolute inset-0 w-full h-full flex flex-col transition-all duration-500 ease-[cubic-bezier(0.2,0.8,0.2,1)] ${s.currentView === 'weeklyData' ? 'translate-x-0 opacity-100 z-20 pointer-events-auto' : 'translate-x-[100%] opacity-0 z-0 pointer-events-none'}`}>
+                    <div className={`absolute inset-0 w-full h-full flex flex-col bg-white transition-all duration-500 ease-[cubic-bezier(0.2,0.8,0.2,1)] ${s.currentView === 'weeklyData' ? 'translate-x-0 opacity-100 z-[60] pointer-events-auto' : 'translate-x-[100%] opacity-0 z-0 pointer-events-none'}`}>
                         <WeeklyDataView
                             onBack={() => s.setCurrentView('streak')}
                             history={s.userData.history}

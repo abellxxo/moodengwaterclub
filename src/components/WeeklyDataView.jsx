@@ -19,11 +19,12 @@ function catmullRomToBezier(points) {
 }
 
 export default function WeeklyDataView({ onBack, history, goal }) {
-    // Build the last 7 days (Mon–Sun of current week)
+    const DAY_LABELS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+
     const weekData = useMemo(() => {
         const today = new Date();
         const sun = new Date(today);
-        sun.setDate(sun.getDate() - sun.getDay());
+        sun.setDate(sun.getDate() - sun.getDay()); // rewind to this week's Sunday
 
         return Array.from({ length: 7 }).map((_, i) => {
             const d = new Date(sun);
@@ -31,7 +32,7 @@ export default function WeeklyDataView({ onBack, history, goal }) {
             const str = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
             const ml = history[str] || 0;
             return {
-                label: d.toLocaleDateString('en-US', { weekday: 'short' }),
+                label: DAY_LABELS[i], // guaranteed Sun, Mon, Tue, Wed, Thu, Fri, Sat
                 ml,
                 dateStr: str,
                 isFuture: d > today,
@@ -70,15 +71,18 @@ export default function WeeklyDataView({ onBack, history, goal }) {
     const activePoint = activeIdx !== null ? points[activeIdx] : null;
 
     return (
-        <div className="absolute inset-0 w-full h-full flex flex-col transition-all duration-500 ease-[cubic-bezier(0.2,0.8,0.2,1)]">
-            {/* HEADER */}
-            <div className="pt-4 pb-3 px-6 flex items-center justify-between flex-shrink-0">
-                <h2 className="text-[22px] font-bold text-[#1C1C1E] tracking-tight">Weekly Data</h2>
+        <div className="absolute inset-0 w-full h-full flex flex-col">
+            {/* HEADER — independent, matches global header style */}
+            <div className="pt-[calc(env(safe-area-inset-top)+1rem)] pb-4 px-8 bg-white/80 backdrop-blur-xl border-b border-gray-100/50 flex-shrink-0 flex items-center justify-between" style={{ minHeight: 'calc(env(safe-area-inset-top) + 72px)' }}>
+                <div>
+                    <h1 className="text-2xl font-bold tracking-tight text-[#1C1C1E]">Weekly Data</h1>
+                    <p className="text-[#8E8E93] text-[12px] font-medium">This week's hydration</p>
+                </div>
                 <button
                     onClick={onBack}
                     className="w-10 h-10 rounded-full bg-[#F2F2F7] text-[#8E8E93] flex items-center justify-center active:scale-90 transition-all"
                 >
-                    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5">
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5">
                         <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
                     </svg>
                 </button>
