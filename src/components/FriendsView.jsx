@@ -154,9 +154,14 @@ function RemindSheet({ show, onClose, friend, onSent, user }) {
         if (!friend || !user || sending) return;
         setSending(true);
 
+        // Instant close + mark sent
+        onSent(friend?.id);
+        onClose();
+
+        // Fire API in background (don't block UI)
         try {
             const idToken = await user.getIdToken();
-            const res = await fetch('/api/remind', {
+            fetch('/api/remind', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -166,20 +171,10 @@ function RemindSheet({ show, onClose, friend, onSent, user }) {
                     targetUid: friend.uid || friend.id,
                     message: `${REMIND_MESSAGES[idx].emoji} ${REMIND_MESSAGES[idx].text}`,
                 }),
-            });
-            if (!res.ok) {
-                const errData = await res.json().catch(() => ({}));
-                console.error('Remind API error:', errData);
-            }
+            }).catch(err => console.error('Failed to send reminder:', err));
         } catch (err) {
-            console.error('Failed to send reminder:', err);
+            console.error('Failed to get token:', err);
         }
-
-        // Write remind state to Firestore
-        onSent(friend?.id);
-
-        // Auto-close sheet after 1s
-        setTimeout(() => onClose(), 1000);
     };
 
     if (!friend) return null;
@@ -380,11 +375,9 @@ export default function FriendsView({ onBack, isVisible }) {
 
     const handleReminderSent = (friendId) => {
         setSentReminders(prev => ({ ...prev, [friendId]: true }));
-        // Show success pill popup after sheet closes (1s delay from sheet)
-        setTimeout(() => {
-            setSuccessPill(true);
-            setTimeout(() => setSuccessPill(false), 2000);
-        }, 1100);
+        // Show success pill instantly
+        setSuccessPill(true);
+        setTimeout(() => setSuccessPill(false), 2000);
     };
 
     // ── Loading state ──────────────────────────────────────
