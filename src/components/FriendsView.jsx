@@ -2,12 +2,9 @@ import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { createPortal } from 'react-dom';
 import { useAppState } from '../AppContext';
 import { auth } from '../firebase';
-import { doc, setDoc, onSnapshot, Timestamp } from 'firebase/firestore';
-import { db, APP_ID } from '../firebase';
 import {
     getUserGroup, subscribeFriendsData, generateInviteLink, getGradientForUid
 } from '../friendsService';
-import { getLogicalDateStr } from '../streakUtils';
 import SplashScreen from './SplashScreen';
 
 // ── Fallback mock data (used if Firestore returns empty, for local testing) ──
@@ -239,7 +236,7 @@ function EmptyState({ onAdd }) {
 }
 
 // ── Main FriendsView ───────────────────────────────────────
-export default function FriendsView({ onBack }) {
+export default function FriendsView({ onBack, isVisible }) {
     const s = useAppState();
     const user = s.user;
 
@@ -255,29 +252,13 @@ export default function FriendsView({ onBack }) {
     const [loading, setLoading] = useState(true);
     const [useMock, setUseMock] = useState(false);
     const unsubRef = useRef(null);
-    const remindUnsubRef = useRef(null);
 
-    // ── Subscribe to remind state from Firestore (realtime) ──
+    // ── Reset remind button state when navigating away ──
     useEffect(() => {
-        if (!user) return;
-        const today = getLogicalDateStr();
-        const remindDocRef = doc(db, 'artifacts', APP_ID, 'users', user.uid, 'data', 'reminders');
-        const unsub = onSnapshot(remindDocRef, (snap) => {
-            if (snap.exists()) {
-                const data = snap.data();
-                // Only count reminders sent today
-                const todayReminders = {};
-                Object.entries(data).forEach(([friendId, val]) => {
-                    if (val?.date === today) {
-                        todayReminders[friendId] = true;
-                    }
-                });
-                setSentReminders(todayReminders);
-            }
-        });
-        remindUnsubRef.current = unsub;
-        return () => unsub();
-    }, [user]);
+        if (!isVisible) {
+            setSentReminders({});
+        }
+    }, [isVisible]);
 
     // ── Load friends from Firestore ────────────────────────
     const loadFriends = useCallback(async () => {
@@ -397,18 +378,8 @@ export default function FriendsView({ onBack }) {
         setShowRemindSheet(true);
     };
 
-    const handleReminderSent = async (friendId) => {
-        if (!user) return;
-        const today = getLogicalDateStr();
-        // Save to Firestore for realtime sync
-        const remindDocRef = doc(db, 'artifacts', APP_ID, 'users', user.uid, 'data', 'reminders');
-        try {
-            await setDoc(remindDocRef, {
-                [friendId]: { date: today, sentAt: Timestamp.now() }
-            }, { merge: true });
-        } catch (err) {
-            console.error('Failed to save remind state:', err);
-        }
+    const handleReminderSent = (friendId) => {
+        setSentReminders(prev => ({ ...prev, [friendId]: true }));
         // Show success pill popup after sheet closes (1s delay from sheet)
         setTimeout(() => {
             setSuccessPill(true);

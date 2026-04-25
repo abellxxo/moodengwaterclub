@@ -253,7 +253,7 @@ export default function App() {
                     <div className={`absolute inset-0 w-full h-full flex flex-col transition-all duration-500 ease-[cubic-bezier(0.2,0.8,0.2,1)] ${s.currentView === 'friends' ? 'translate-x-0 opacity-100 z-20 pointer-events-auto' : 'translate-x-[100%] opacity-0 z-0 pointer-events-none'}`}>
                         <div className="absolute inset-0 right-0 w-[40vw] max-w-[200px] h-full bg-[#EAB0BE]/10 rounded-l-full blur-[80px] pointer-events-none z-0"></div>
                         <div className="relative z-10 w-full h-full flex flex-col pt-4">
-                            <FriendsView onBack={() => s.setCurrentView('home')} />
+                            <FriendsView onBack={() => s.setCurrentView('home')} isVisible={s.currentView === 'friends'} />
                         </div>
                     </div>
                 </div>
