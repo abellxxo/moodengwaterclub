@@ -2,9 +2,12 @@ import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { createPortal } from 'react-dom';
 import { useAppState } from '../AppContext';
 import { auth } from '../firebase';
+import { doc, setDoc, onSnapshot, Timestamp } from 'firebase/firestore';
+import { db, APP_ID } from '../firebase';
 import {
     getUserGroup, subscribeFriendsData, generateInviteLink, getGradientForUid
 } from '../friendsService';
+import { getLogicalDateStr } from '../streakUtils';
 import SplashScreen from './SplashScreen';
 
 // ── Fallback mock data (used if Firestore returns empty, for local testing) ──
@@ -142,26 +145,20 @@ function AddFriendSheet({ show, onClose, user }) {
     );
 }
 
-// ── Remind Sheet ───────────────────────────────────────────
-function RemindSheet({ show, onClose, friend, onSent, user, showToastMsg }) {
-    const [selectedIdx, setSelectedIdx] = useState(0);
+// ── Remind Sheet (tap-to-send, no title/subtitle/button) ──
+function RemindSheet({ show, onClose, friend, onSent, user }) {
     const [sending, setSending] = useState(false);
 
     useEffect(() => {
-        if (show) {
-            setSelectedIdx(0);
-            setSending(false);
-        }
+        if (show) setSending(false);
     }, [show]);
 
-    const handleSend = async () => {
-        if (!friend || !user) return;
+    const handleTapMessage = async (idx) => {
+        if (!friend || !user || sending) return;
         setSending(true);
 
         try {
-            // Get the current user's ID token for auth
             const idToken = await user.getIdToken();
-
             const res = await fetch('/api/remind', {
                 method: 'POST',
                 headers: {
@@ -170,10 +167,9 @@ function RemindSheet({ show, onClose, friend, onSent, user, showToastMsg }) {
                 },
                 body: JSON.stringify({
                     targetUid: friend.uid || friend.id,
-                    message: `${REMIND_MESSAGES[selectedIdx].emoji} ${REMIND_MESSAGES[selectedIdx].text}`,
+                    message: `${REMIND_MESSAGES[idx].emoji} ${REMIND_MESSAGES[idx].text}`,
                 }),
             });
-
             if (!res.ok) {
                 const errData = await res.json().catch(() => ({}));
                 console.error('Remind API error:', errData);
@@ -182,46 +178,32 @@ function RemindSheet({ show, onClose, friend, onSent, user, showToastMsg }) {
             console.error('Failed to send reminder:', err);
         }
 
-        // Always mark as sent (UX: don't let API failures block the UI)
+        // Write remind state to Firestore
         onSent(friend?.id);
-        if (showToastMsg) showToastMsg('Reminder sent! 💧', true);
-        onClose();
+
+        // Auto-close sheet after 1s
+        setTimeout(() => onClose(), 1000);
     };
 
     if (!friend) return null;
 
-    const gradient = friend.gradient || ['#8E8E93', '#8E8E93'];
-
     return (
         <div className={`absolute inset-0 z-50 flex flex-col justify-end transition-all duration-300 ${show ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}>
             <div className="absolute inset-0 bg-black/30 backdrop-blur-sm" onClick={onClose}></div>
-            <div className={`bg-white w-full rounded-t-[2.5rem] p-8 pb-12 shadow-2xl relative z-10 transform transition-all duration-400 ease-[cubic-bezier(0.2,0.8,0.2,1)] ${show ? 'translate-y-0' : 'translate-y-full'}`}>
-                <div className="w-12 h-1.5 bg-gray-200 rounded-full mx-auto mb-6"></div>
+            <div className={`bg-white w-full rounded-t-[2.5rem] px-6 pt-5 pb-10 shadow-2xl relative z-10 transform transition-all duration-400 ease-[cubic-bezier(0.2,0.8,0.2,1)] ${show ? 'translate-y-0' : 'translate-y-full'}`}>
+                <div className="w-12 h-1.5 bg-gray-200 rounded-full mx-auto mb-5"></div>
 
-                {/* Friend avatar + name */}
-                <div className="flex items-center gap-3 mb-4 justify-center">
-                    <div
-                        className="w-10 h-10 rounded-full flex items-center justify-center text-white text-sm font-bold"
-                        style={{ background: `linear-gradient(135deg, ${gradient[0]}, ${gradient[1]})` }}
-                    >
-                        {friend.initials}
-                    </div>
-                    <div>
-                        <h3 className="text-lg font-bold text-[#1C1C1E]">Remind {friend.name} 💧</h3>
-                        <p className="text-[#8E8E93] text-[12px] font-medium">Pick a message to send:</p>
-                    </div>
-                </div>
-
-                {/* Message options */}
-                <div className="flex flex-col gap-2.5 mb-6">
+                {/* Message options only — tap to send */}
+                <div className="flex flex-col gap-2">
                     {REMIND_MESSAGES.map((msg, idx) => (
                         <button
                             key={idx}
-                            onClick={() => setSelectedIdx(idx)}
-                            className={`w-full text-left px-5 py-3.5 rounded-2xl border-2 transition-all duration-200 ${
-                                selectedIdx === idx
-                                    ? 'border-[#4a90d9] bg-[#4a90d9]/5'
-                                    : 'border-gray-100 bg-[#F9F9FB] hover:border-gray-200'
+                            onClick={() => handleTapMessage(idx)}
+                            disabled={sending}
+                            className={`w-full text-left px-5 py-4 rounded-2xl transition-all duration-200 ${
+                                sending
+                                    ? 'bg-[#F2F2F7] text-[#8E8E93] cursor-default'
+                                    : 'bg-[#F9F9FB] hover:bg-[#F2F2F7] active:scale-[0.98]'
                             }`}
                         >
                             <span className="text-[14px] font-medium text-[#1C1C1E]">
@@ -230,19 +212,6 @@ function RemindSheet({ show, onClose, friend, onSent, user, showToastMsg }) {
                         </button>
                     ))}
                 </div>
-
-                {/* Send button */}
-                <button
-                    onClick={handleSend}
-                    disabled={sending}
-                    className={`w-full py-4 rounded-2xl font-bold text-[15px] transition-all duration-300 ${
-                        sending
-                            ? 'bg-[#34C759] text-white'
-                            : 'bg-gradient-to-r from-[#7dd8d8] to-[#4a90d9] text-white active:scale-[0.98]'
-                    }`}
-                >
-                    {sending ? 'Sent! ✓' : 'Send Reminder 🔔'}
-                </button>
             </div>
         </div>
     );
@@ -279,12 +248,36 @@ export default function FriendsView({ onBack }) {
     const [showRemindSheet, setShowRemindSheet] = useState(false);
     const [remindTarget, setRemindTarget] = useState(null);
     const [sentReminders, setSentReminders] = useState({});
+    const [successPill, setSuccessPill] = useState(false);
 
     // Firestore-loaded friends
     const [friends, setFriends] = useState([]);
     const [loading, setLoading] = useState(true);
     const [useMock, setUseMock] = useState(false);
     const unsubRef = useRef(null);
+    const remindUnsubRef = useRef(null);
+
+    // ── Subscribe to remind state from Firestore (realtime) ──
+    useEffect(() => {
+        if (!user) return;
+        const today = getLogicalDateStr();
+        const remindDocRef = doc(db, 'artifacts', APP_ID, 'users', user.uid, 'data', 'reminders');
+        const unsub = onSnapshot(remindDocRef, (snap) => {
+            if (snap.exists()) {
+                const data = snap.data();
+                // Only count reminders sent today
+                const todayReminders = {};
+                Object.entries(data).forEach(([friendId, val]) => {
+                    if (val?.date === today) {
+                        todayReminders[friendId] = true;
+                    }
+                });
+                setSentReminders(todayReminders);
+            }
+        });
+        remindUnsubRef.current = unsub;
+        return () => unsub();
+    }, [user]);
 
     // ── Load friends from Firestore ────────────────────────
     const loadFriends = useCallback(async () => {
@@ -298,7 +291,6 @@ export default function FriendsView({ onBack }) {
         try {
             const group = await getUserGroup(user.uid);
             if (!group || !group.members || group.members.length <= 1) {
-                // No group or alone in group
                 setFriends([]);
                 setUseMock(false);
                 setLoading(false);
@@ -319,7 +311,6 @@ export default function FriendsView({ onBack }) {
 
         } catch (err) {
             console.error('Error loading friends:', err);
-            // Fallback to mock data for local testing
             setFriends(MOCK_FRIENDS);
             setUseMock(true);
             setLoading(false);
@@ -406,8 +397,23 @@ export default function FriendsView({ onBack }) {
         setShowRemindSheet(true);
     };
 
-    const handleReminderSent = (friendId) => {
-        setSentReminders(prev => ({ ...prev, [friendId]: true }));
+    const handleReminderSent = async (friendId) => {
+        if (!user) return;
+        const today = getLogicalDateStr();
+        // Save to Firestore for realtime sync
+        const remindDocRef = doc(db, 'artifacts', APP_ID, 'users', user.uid, 'data', 'reminders');
+        try {
+            await setDoc(remindDocRef, {
+                [friendId]: { date: today, sentAt: Timestamp.now() }
+            }, { merge: true });
+        } catch (err) {
+            console.error('Failed to save remind state:', err);
+        }
+        // Show success pill popup after sheet closes (1s delay from sheet)
+        setTimeout(() => {
+            setSuccessPill(true);
+            setTimeout(() => setSuccessPill(false), 2000);
+        }, 1100);
     };
 
     // ── Loading state ──────────────────────────────────────
@@ -548,6 +554,14 @@ export default function FriendsView({ onBack }) {
                 </div>
             )}
 
+            {/* Success Pill Popup */}
+            <div className={`fixed left-1/2 -translate-x-1/2 z-[9999] transition-all duration-500 ease-[cubic-bezier(0.2,0.8,0.2,1)] ${successPill ? 'bottom-[120px] opacity-100 scale-100' : 'bottom-16 opacity-0 scale-95 pointer-events-none'}`}>
+                <div className="bg-white px-5 py-3 rounded-full shadow-[0_10px_40px_rgba(0,0,0,0.12)] border border-gray-100 flex items-center gap-3">
+                    <span className="text-xl">💧</span>
+                    <span className="text-[13px] font-bold text-[#1C1C1E] whitespace-nowrap">Reminder sent!</span>
+                </div>
+            </div>
+
             {/* Bottom Sheets */}
             {typeof document !== 'undefined' && document.querySelector('main') ? createPortal(
                 <>
@@ -558,7 +572,6 @@ export default function FriendsView({ onBack }) {
                         friend={remindTarget}
                         onSent={handleReminderSent}
                         user={user}
-                        showToastMsg={s.showToastMsg}
                     />
                 </>,
                 document.querySelector('main')
