@@ -225,6 +225,8 @@ export default function App() {
                             userData={s.userData}
                             isTodayGoalMet={s.isTodayGoalMet}
                             progress={s.progress}
+                            weekDays={s.weekDays}
+                            streakCount={s.streakCount}
                         />
                     </div>
 

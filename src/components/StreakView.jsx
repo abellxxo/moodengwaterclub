@@ -4,7 +4,7 @@ export default function StreakView({ streakCount, isTodayGoalMet, weekDays, isCl
     return (
         <>
             {/* Streak Card */}
-            <div className="bg-white w-full rounded-[2.5rem] p-8 shadow-[0_10px_40px_rgba(0,0,0,0.04)] border border-gray-100 flex flex-col items-center text-center mb-8 relative transition-all">
+            <div className="bg-white w-full rounded-[2.5rem] p-8 shadow-[0_10px_40px_rgba(0,0,0,0.04)] border border-gray-100 flex flex-col items-center text-center mb-4 relative transition-all">
                 <button
                     onClick={() => setShowCalendar(true)}
                     className="absolute top-5 right-5 w-10 h-10 bg-[#F2F2F7] text-[#6ED8EA] rounded-full flex items-center justify-center hover:bg-[#E5E5EA] active:scale-90 transition-all"
@@ -27,27 +27,10 @@ export default function StreakView({ streakCount, isTodayGoalMet, weekDays, isCl
                 )}
             </div>
 
-            {/* This Week */}
-            <div className="w-full">
-                <h3 className="text-[#1C1C1E] font-bold text-lg mb-5 ml-2">This Week</h3>
-                <div className="bg-white rounded-[2.5rem] px-4 py-6 shadow-[0_5px_25px_rgba(0,0,0,0.03)] border border-gray-100 flex justify-between items-center">
-                    {weekDays.map((day, idx) => (
-                        <div key={idx} className="flex flex-col items-center space-y-3">
-                            <div className={`w-[38px] h-[38px] rounded-full flex items-center justify-center transition-all duration-700 ${day.isHit ? 'bg-gradient-to-br from-[#B8E9F3] to-[#6ED8EA] shadow-lg shadow-[#B8E9F3]' : 'bg-[#F2F2F7]'}`}>
-                                {day.isHit && (
-                                    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-white" viewBox="0 0 20 20" fill="currentColor">
-                                        <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
-                                    </svg>
-                                )}
-                            </div>
-                            <span className={`text-[10px] font-bold uppercase tracking-wider ${day.isHit ? 'text-[#6ED8EA]' : 'text-[#8E8E93]'}`}>{day.name}</span>
-                        </div>
-                    ))}
-                </div>
-            </div>
+
 
             {/* Weekly Data Card */}
-            <div className="w-full mt-5">
+            <div className="w-full mt-4">
                 <button
                     onClick={onShowWeeklyData}
                     className="w-full bg-white rounded-[2rem] p-4 shadow-[0_5px_20px_rgba(0,0,0,0.03)] border border-gray-100 flex items-center justify-between transition-all active:scale-95"
@@ -70,7 +53,7 @@ export default function StreakView({ streakCount, isTodayGoalMet, weekDays, isCl
             </div>
 
             {/* Claim Reward */}
-            <div className="w-full mt-5 flex flex-col items-center">
+            <div className="w-full mt-4 flex flex-col items-center">
                 <button
                     onClick={handleClaimReward}
                     disabled={isClaiming}
