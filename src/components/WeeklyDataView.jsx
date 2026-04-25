@@ -49,13 +49,34 @@ function monotoneCubicToBezier(points) {
 
 export default function WeeklyDataView({ history, goal }) {
     const DAY_LABELS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+    const MONTH_LABELS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
     // Unique IDs to avoid SVG gradient ID collisions in the DOM
     const uid = 'wdv';
+
+    // Week navigation: 0 = this week, -1 = last week, etc.
+    const [weekOffset, setWeekOffset] = useState(0);
+
+    // Find the earliest date in history to limit how far back user can go
+    const earliestWeekOffset = useMemo(() => {
+        const keys = Object.keys(history || {}).filter(k => /^\d{4}-\d{2}-\d{2}$/.test(k));
+        if (keys.length === 0) return 0;
+        keys.sort();
+        const earliest = new Date(keys[0] + 'T00:00:00');
+        const today = new Date();
+        const thisWeekSun = new Date(today);
+        thisWeekSun.setDate(thisWeekSun.getDate() - thisWeekSun.getDay());
+        thisWeekSun.setHours(0, 0, 0, 0);
+        const earliestSun = new Date(earliest);
+        earliestSun.setDate(earliestSun.getDate() - earliestSun.getDay());
+        earliestSun.setHours(0, 0, 0, 0);
+        const diffMs = earliestSun.getTime() - thisWeekSun.getTime();
+        return Math.floor(diffMs / (7 * 24 * 60 * 60 * 1000));
+    }, [history]);
 
     const weekData = useMemo(() => {
         const today = new Date();
         const sun = new Date(today);
-        sun.setDate(sun.getDate() - sun.getDay()); // rewind to this week's Sunday
+        sun.setDate(sun.getDate() - sun.getDay() + weekOffset * 7);
 
         return Array.from({ length: 7 }).map((_, i) => {
             const d = new Date(sun);
@@ -63,13 +84,23 @@ export default function WeeklyDataView({ history, goal }) {
             const str = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
             const ml = history[str] || 0;
             return {
-                label: DAY_LABELS[i], // guaranteed Sun, Mon, Tue, Wed, Thu, Fri, Sat
+                label: DAY_LABELS[i],
                 ml,
                 dateStr: str,
                 isFuture: d > today,
             };
         });
-    }, [history]);
+    }, [history, weekOffset]);
+
+    // Date range label for current week view
+    const weekRangeLabel = useMemo(() => {
+        if (weekData.length === 0) return '';
+        const first = new Date(weekData[0].dateStr + 'T00:00:00');
+        const last = new Date(weekData[6].dateStr + 'T00:00:00');
+        const f = `${MONTH_LABELS[first.getMonth()]} ${first.getDate()}`;
+        const l = `${MONTH_LABELS[last.getMonth()]} ${last.getDate()}`;
+        return `${f} – ${l}`;
+    }, [weekData]);
 
     // Find index of highest point (or today) for default tooltip
     const peakIdx = useMemo(() => {
@@ -79,6 +110,16 @@ export default function WeeklyDataView({ history, goal }) {
     }, [weekData]);
 
     const [activeIdx, setActiveIdx] = useState(peakIdx);
+
+    // Reset active tooltip when changing weeks
+    const handlePrevWeek = () => {
+        setWeekOffset(prev => Math.max(prev - 1, earliestWeekOffset));
+        setActiveIdx(null);
+    };
+    const handleNextWeek = () => {
+        setWeekOffset(prev => Math.min(prev + 1, 0));
+        setActiveIdx(null);
+    };
 
     // SVG chart dimensions
     const W = 320, H = 140, PAD_X = 24, PAD_Y = 20;
@@ -108,12 +149,41 @@ export default function WeeklyDataView({ history, goal }) {
 
     const activePoint = activeIdx !== null ? points[activeIdx] : null;
 
+    const canGoPrev = weekOffset > earliestWeekOffset;
+    const canGoNext = weekOffset < 0;
+
     return (
         <div className="w-full flex flex-col gap-4 pb-6">
 
                 {/* CHART CARD */}
                 <div className="w-full bg-white rounded-[1.5rem] sm:rounded-[2.5rem] p-4 sm:p-6 shadow-[0_5px_25px_rgba(0,0,0,0.04)] border border-gray-100">
-                    <p className="text-[#8E8E93] text-[11px] font-bold uppercase tracking-widest mb-1">This Week</p>
+                    {/* Week navigation header */}
+                    <div className="flex items-center justify-between mb-1">
+                        <button
+                            onClick={handlePrevWeek}
+                            disabled={!canGoPrev}
+                            className={`w-8 h-8 rounded-full flex items-center justify-center transition-all active:scale-90 ${canGoPrev ? 'bg-[#F2F2F7] text-[#8E8E93] hover:text-[#1C1C1E]' : 'text-[#D1D1D6] cursor-default'}`}
+                        >
+                            <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5">
+                                <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
+                            </svg>
+                        </button>
+                        <div className="text-center">
+                            <p className="text-[#8E8E93] text-[11px] font-bold uppercase tracking-widest">{weekOffset === 0 ? 'This Week' : weekOffset === -1 ? 'Last Week' : weekRangeLabel}</p>
+                            {weekOffset === 0 || weekOffset === -1 ? (
+                                <p className="text-[#AEAEB2] text-[10px] font-medium mt-0.5">{weekRangeLabel}</p>
+                            ) : null}
+                        </div>
+                        <button
+                            onClick={handleNextWeek}
+                            disabled={!canGoNext}
+                            className={`w-8 h-8 rounded-full flex items-center justify-center transition-all active:scale-90 ${canGoNext ? 'bg-[#F2F2F7] text-[#8E8E93] hover:text-[#1C1C1E]' : 'text-[#D1D1D6] cursor-default'}`}
+                        >
+                            <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5">
+                                <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
+                            </svg>
+                        </button>
+                    </div>
                     <p className="text-[#1C1C1E] text-[22px] font-bold mb-5">
                         {weekData.reduce((s, d) => s + d.ml, 0).toLocaleString()}
                         <span className="text-[#8E8E93] text-[14px] font-medium ml-1">ml total</span>
