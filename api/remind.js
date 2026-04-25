@@ -80,22 +80,6 @@ export default async function handler(req, res) {
                     Urgency: 'high',
                 },
             },
-            apns: {
-                headers: {
-                    'apns-priority': '10',
-                    'apns-push-type': 'alert',
-                },
-                payload: {
-                    aps: {
-                        'content-available': 1,
-                        alert: {
-                            title: 'Water Reminder 💧',
-                            body: message,
-                        },
-                        sound: 'default',
-                    },
-                },
-            },
             token: fcmToken,
         });
 
