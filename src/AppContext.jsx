@@ -333,12 +333,15 @@ export function useAppState() {
     const handleClaimReward = async () => {
         if (isClaiming) return;
 
-        if (streakCount >= 7) {
+        const claimed = userData.matchaClaimed || 0;
+        const nextMilestone = 7 * (claimed + 1);
+
+        if (streakCount >= nextMilestone) {
             setIsClaiming(true);
             try {
                 const userDocRef = doc(db, 'artifacts', APP_ID, 'users', user.uid, 'data', 'tracker');
                 await setDoc(userDocRef, { matchaClaimed: increment(1) }, { merge: true });
-                showToastMsg('Reward claimed! Streak reset.', true);
+                showToastMsg('Matcha claimed! 🍵', true);
                 const message = encodeURIComponent("Yay! I successfully completed my 7-day hydration streak! I'm ready to claim my Matcha reward 🍵✨");
                 window.open(`https://wa.me/6281231223796?text=${message}`, '_blank', 'noopener,noreferrer');
             } catch (error) {

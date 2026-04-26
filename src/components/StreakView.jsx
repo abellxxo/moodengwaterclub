@@ -1,6 +1,9 @@
 import React from 'react';
 
-export default function StreakView({ streakCount, isTodayGoalMet, weekDays, isClaiming, handleClaimReward, setShowCalendar, onShowWeeklyData }) {
+export default function StreakView({ streakCount, isTodayGoalMet, weekDays, isClaiming, handleClaimReward, setShowCalendar, onShowWeeklyData, matchaClaimed = 0 }) {
+    const nextMilestone = 7 * (matchaClaimed + 1);
+    const canClaim = streakCount >= nextMilestone;
+    const daysLeft = nextMilestone - streakCount;
     return (
         <>
             {/* Streak Card */}
@@ -60,15 +63,15 @@ export default function StreakView({ streakCount, isTodayGoalMet, weekDays, isCl
                     className={`w-full bg-white rounded-[2rem] p-4 shadow-[0_5px_20px_rgba(0,0,0,0.03)] border border-gray-100 flex items-center justify-between transition-all active:scale-95 ${isClaiming ? 'opacity-70 cursor-not-allowed' : ''}`}
                 >
                     <div className="flex items-center gap-4">
-                        <div className={`w-12 h-12 rounded-full flex items-center justify-center text-[26px] transition-all ${streakCount >= 7 ? 'bg-[#EAB0BE]/20' : 'bg-gray-100 grayscale'}`}>🍵</div>
+                        <div className={`w-12 h-12 rounded-full flex items-center justify-center text-[26px] transition-all ${canClaim ? 'bg-[#EAB0BE]/20' : 'bg-gray-100 grayscale'}`}>🍵</div>
                         <div className="text-left">
                             <h4 className="text-[#1C1C1E] font-bold text-[15px]">
                                 {isClaiming ? 'Claiming...' : 'Claim your reward'}
                             </h4>
                             <p className="text-[#8E8E93] text-[12px] font-medium mt-0.5">
-                                {streakCount >= 7
+                                {canClaim
                                     ? 'Tap to claim your Matcha! 🎉'
-                                    : `${7 - streakCount} more day${7 - streakCount !== 1 ? 's' : ''} to unlock`}
+                                    : `${daysLeft} more day${daysLeft !== 1 ? 's' : ''} to unlock`}
                             </p>
                         </div>
                     </div>

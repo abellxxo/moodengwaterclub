@@ -240,6 +240,7 @@ export default function App() {
                             handleClaimReward={s.handleClaimReward}
                             setShowCalendar={s.setShowCalendar}
                             onShowWeeklyData={() => s.setCurrentView('weeklyData')}
+                            matchaClaimed={s.userData.matchaClaimed || 0}
                         />
                     </div>
 

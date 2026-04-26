@@ -107,10 +107,13 @@ export default function HomeView({ currentCount, userData, isTodayGoalMet, progr
                             </div>
                             <div>
                                 <p className="text-[11px] font-bold uppercase tracking-widest text-[#8E8E93]">Current Streak</p>
-                                <p className="text-[10px] font-medium mt-0.5" style={{ color: streakCount >= 7 ? '#EAB0BE' : '#FF9500' }}>
-                                    {streakCount >= 7
-                                        ? '🍵 Matcha unlocked!'
-                                        : `🍵 ${7 - streakCount} day${7 - streakCount !== 1 ? 's' : ''} till matcha`}
+                                <p className="text-[10px] font-medium mt-0.5" style={{ color: streakCount >= 7 * ((userData.matchaClaimed || 0) + 1) ? '#EAB0BE' : '#FF9500' }}>
+                                    {(() => {
+                                        const nextMilestone = 7 * ((userData.matchaClaimed || 0) + 1);
+                                        const daysLeft = nextMilestone - streakCount;
+                                        if (daysLeft <= 0) return '🍵 Matcha unlocked!';
+                                        return `🍵 ${daysLeft} day${daysLeft !== 1 ? 's' : ''} till matcha`;
+                                    })()}
                                 </p>
                             </div>
                         </div>
