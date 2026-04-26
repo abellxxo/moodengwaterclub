@@ -1,7 +1,11 @@
 import React from 'react';
 
-export default function RewardModal({ show, onClose, streakCount }) {
-    const daysLeft = 7 - streakCount;
+export default function RewardModal({ show, onClose, streakCount, matchaClaimed = 0 }) {
+    const nextMilestone = 7 * (matchaClaimed + 1);
+    const daysLeft = nextMilestone - streakCount;
+    // Progress within current 7-day cycle
+    const cycleProgress = streakCount - (matchaClaimed * 7);
+    const cycleDays = Math.max(0, Math.min(cycleProgress, 7));
 
     return (
         <div className={`absolute inset-0 z-50 flex items-end justify-center transition-all duration-300 ${show ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}>
@@ -22,12 +26,12 @@ export default function RewardModal({ show, onClose, streakCount }) {
                     <div className="w-full mb-2">
                         <div className="flex justify-between text-[11px] font-bold text-[#8E8E93] mb-2">
                             <span>Streak Progress</span>
-                            <span>{streakCount}/7 days</span>
+                            <span>{cycleDays}/7 days</span>
                         </div>
                         <div className="w-full h-3 bg-[#F2F2F7] rounded-full overflow-hidden">
                             <div
                                 className="h-full bg-gradient-to-r from-[#B8E9F3] to-[#6ED8EA] rounded-full transition-all duration-700"
-                                style={{ width: `${(streakCount / 7) * 100}%` }}
+                                style={{ width: `${(cycleDays / 7) * 100}%` }}
                             ></div>
                         </div>
                     </div>
@@ -38,12 +42,12 @@ export default function RewardModal({ show, onClose, streakCount }) {
                             <div
                                 key={i}
                                 className={`w-8 h-8 rounded-full flex items-center justify-center text-[11px] font-black transition-all ${
-                                    i < streakCount
+                                    i < cycleDays
                                         ? 'bg-gradient-to-br from-[#B8E9F3] to-[#6ED8EA] text-white shadow-md'
                                         : 'bg-[#F2F2F7] text-[#C7C7CC]'
                                 }`}
                             >
-                                {i < streakCount ? '✓' : i + 1}
+                                {i < cycleDays ? '✓' : i + 1}
                             </div>
                         ))}
                     </div>

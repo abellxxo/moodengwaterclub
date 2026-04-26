@@ -133,6 +133,7 @@ export default function App() {
                     show={s.showRewardModal}
                     onClose={() => s.setShowRewardModal(false)}
                     streakCount={s.streakCount}
+                    matchaClaimed={s.userData.matchaClaimed || 0}
                 />
 
                 {/* HEADER */}
