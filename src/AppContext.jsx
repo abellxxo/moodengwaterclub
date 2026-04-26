@@ -9,7 +9,8 @@ import {
     doc,
     setDoc,
     updateDoc,
-    onSnapshot
+    onSnapshot,
+    increment
 } from 'firebase/firestore';
 import { auth, db, APP_ID, messaging, getToken, onMessage } from './firebase';
 import { getLogicalDateStr, calculateStreak } from './streakUtils';
@@ -336,8 +337,8 @@ export function useAppState() {
             setIsClaiming(true);
             try {
                 const userDocRef = doc(db, 'artifacts', APP_ID, 'users', user.uid, 'data', 'tracker');
-                await setDoc(userDocRef, { streakResetDate: getLogicalDateStr() }, { merge: true });
-                showToastMsg('Reward claimed! Streak reset.', true);
+                await setDoc(userDocRef, { matchaClaimed: increment(1) }, { merge: true });
+                showToastMsg('Matcha claimed! 🍵', true);
                 const message = encodeURIComponent("Yay! I successfully completed my 7-day hydration streak! I'm ready to claim my Matcha reward 🍵✨");
                 window.open(`https://wa.me/6281231223796?text=${message}`, '_blank', 'noopener,noreferrer');
             } catch (error) {

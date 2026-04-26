@@ -32,44 +32,27 @@ const REMIND_MESSAGES = [
     { emoji: '🚨', text: "Air putih calling your name right now" },
 ];
 
-// ── Small water bottle for friend cards ────────────────────
-function MiniBottle({ progress }) {
-    const fill = progress > 0 ? Math.max(progress, 5) : 0;
-    return (
-        <div className="w-32 h-48 rounded-[2.5rem] p-1.5 bg-gradient-to-b from-[#F2F2F7] to-white shadow-[inset_0_2px_16px_rgba(0,0,0,0.05)] border border-gray-100 relative overflow-hidden flex items-end">
-            <div
-                className="w-full bg-gradient-to-t from-[#007AFF] via-[#148EFF] to-[#5AC8FA] relative rounded-[2rem] overflow-hidden transition-all duration-[1000ms] ease-out shadow-[0_-6px_20px_rgba(0,122,255,0.3)]"
-                style={{ height: `${fill}%`, opacity: fill === 0 ? 0 : 1 }}
-            >
-                <div className="absolute top-0 left-0 right-0 h-4 bg-gradient-to-b from-white/40 to-transparent rounded-[100%] scale-150 -translate-y-1/2"></div>
-                <div className="absolute inset-0 bg-gradient-to-r from-black/5 via-transparent to-white/10"></div>
-            </div>
-            {/* Glass highlights */}
-            <div className="absolute top-6 bottom-6 left-4 w-3 bg-white/50 rounded-full blur-[3px] pointer-events-none"></div>
-            <div className="absolute top-12 bottom-12 right-3 w-1 bg-white/30 rounded-full blur-[1.5px] pointer-events-none"></div>
-        </div>
-    );
-}
+// ── MiniBottle removed in favor of horizontal progress bar ──
 
 // ── Status Pill ────────────────────────────────────────────
 function StatusPill({ progress, goalMet }) {
     if (goalMet) {
         return (
-            <span className="text-[12px] font-semibold px-4 py-1.5 rounded-full bg-[#34C759]/15 text-[#248A3D]">
-                Daily Goal Reached! 🎉
+            <span className="inline-block text-[11px] font-bold uppercase tracking-wider px-3 py-1 rounded-full bg-[#34C759]/15 text-[#248A3D]">
+                Goal Reached 🎉
             </span>
         );
     }
     if (progress >= 60) {
         return (
-            <span className="text-[12px] font-semibold px-4 py-1.5 rounded-full bg-[#007AFF]/10 text-[#0055CC]">
-                Almost there! 💪
+            <span className="inline-block text-[11px] font-bold uppercase tracking-wider px-3 py-1 rounded-full bg-[#007AFF]/10 text-[#0055CC]">
+                Almost there 💪
             </span>
         );
     }
     return (
-        <span className="text-[12px] font-semibold px-4 py-1.5 rounded-full bg-[#FFD60A]/15 text-[#8B6914]">
-            Keep drinking! 💧
+        <span className="inline-block text-[11px] font-bold uppercase tracking-wider px-3 py-1 rounded-full bg-[#FFD60A]/15 text-[#8B6914]">
+            Keep drinking 💧
         </span>
     );
 }
@@ -430,68 +413,109 @@ export default function FriendsView({ onBack, isVisible }) {
                                         zIndex: isActive ? 10 : 0,
                                     }}
                                 >
-                                    {/* Avatar */}
-                                    <div
-                                        className="w-20 h-20 rounded-full flex items-center justify-center text-white text-2xl font-bold shadow-lg mb-4"
-                                        style={{
-                                            background: `linear-gradient(135deg, ${gradient[0]}, ${gradient[1]})`,
-                                            boxShadow: `0 8px 24px ${gradient[0]}40`,
-                                        }}
-                                    >
-                                        {friend.initials}
+                                    {/* RPG-style Friend Card */}
+                                    <div className="bg-white w-full rounded-[2rem] p-7 shadow-[0_10px_40px_rgba(0,0,0,0.04)] border border-gray-100 mb-4 relative overflow-hidden">
+                                        <div className="flex items-center gap-6 mb-6 h-32">
+                                            <div 
+                                                className="w-32 h-32 flex-shrink-0 rounded-2xl flex items-center justify-center text-white text-4xl font-bold shadow-lg"
+                                                style={{
+                                                    background: `linear-gradient(135deg, ${gradient[0]}, ${gradient[1]})`,
+                                                    boxShadow: `0 8px 24px ${gradient[0]}40`,
+                                                }}
+                                            >
+                                                {friend.initials}
+                                            </div>
+                                            <div className="flex-1 min-w-0 flex flex-col justify-center">
+                                                <h2 className="text-[20px] font-bold text-[#1C1C1E] mb-1 truncate">{friend.name}</h2>
+                                                <p className="text-[#8E8E93] text-[14px] font-medium mb-3">🔥 {friend.streak} day streak</p>
+                                                <div>
+                                                    <StatusPill progress={progress} goalMet={goalMet} />
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        {/* Progress bar */}
+                                        <div className="w-full relative">
+                                            <div className="flex items-center gap-2">
+                                                <div className="flex-1 h-5 bg-[#F2F2F7] rounded-full overflow-hidden">
+                                                    <div
+                                                        className="h-full rounded-full transition-all duration-700 ease-out"
+                                                        style={{
+                                                            width: `${friend.current > 0 ? Math.max(progress, 3) : 0}%`,
+                                                            background: goalMet
+                                                                ? 'linear-gradient(90deg, #B8E9F3, #6ED8EA, #34C759)'
+                                                                : 'linear-gradient(90deg, #B8E9F3, #6ED8EA)',
+                                                        }}
+                                                    />
+                                                </div>
+                                                <span className="text-[18px] drop-shadow-sm flex-shrink-0">💧</span>
+                                            </div>
+                                            <div className="flex justify-between mt-2">
+                                                <span className="text-[13px] font-bold text-[#1C1C1E]">
+                                                    {friend.current.toLocaleString()} ml done
+                                                </span>
+                                                <span className="text-[13px] font-bold text-[#8E8E93]">
+                                                    Goal {friend.goal.toLocaleString()}ml
+                                                </span>
+                                            </div>
+                                        </div>
                                     </div>
 
-                                    {/* Name */}
-                                    <h2 className="text-2xl font-bold text-[#1C1C1E] mb-1">{friend.name}</h2>
-
-                                    {/* Streak */}
-                                    <p className="text-[#8E8E93] text-[13px] font-medium mb-5">
-                                        🔥 {friend.streak} day streak
-                                    </p>
-
-                                    {/* Water Count */}
-                                    <div className="flex items-baseline space-x-1 justify-center mb-5">
-                                        <span className="text-[56px] font-medium tracking-[-0.05em] text-[#1C1C1E] leading-none">
-                                            {friend.current.toLocaleString()}
-                                        </span>
-                                        <span className="text-lg font-medium tracking-tight text-[#8E8E93]">
-                                            / {friend.goal.toLocaleString()} ml
-                                        </span>
+                                    {/* Matcha Card */}
+                                    <div className="w-full mb-4">
+                                        <div className="bg-white rounded-[2rem] px-5 py-4 shadow-[0_5px_25px_rgba(0,0,0,0.03)] border border-gray-100 flex items-center justify-between">
+                                            <div className="flex items-center gap-3">
+                                                <div className="w-12 h-12 rounded-full flex items-center justify-center text-2xl transition-all duration-700 bg-[#EAB0BE]/10">
+                                                    🍵
+                                                </div>
+                                                <div>
+                                                    <p className="text-[11px] font-bold uppercase tracking-widest text-[#8E8E93]">Matcha Rewards</p>
+                                                    <p className="text-[10px] font-medium mt-0.5" style={{ color: '#EAB0BE' }}>
+                                                        {(friend.matchaClaimed || 0) > 0 ? `${friend.matchaClaimed}x claimed!` : 'Not unlocked yet'}
+                                                    </p>
+                                                </div>
+                                            </div>
+                                            <div className="flex items-baseline gap-1">
+                                                <span className="text-3xl font-bold tracking-tight text-[#1C1C1E]">{friend.matchaClaimed || 0}</span>
+                                                <span className="text-[13px] font-bold text-[#8E8E93]">{(friend.matchaClaimed || 0) === 1 ? 'Cup' : 'Cups'}</span>
+                                            </div>
+                                        </div>
                                     </div>
 
-                                    {/* Water Bottle */}
-                                    <div className="relative flex justify-center items-center mb-5">
-                                        <MiniBottle progress={progress} />
+                                    {/* Action Card */}
+                                    <div className="w-full mb-4">
+                                        <div className="bg-white rounded-[2rem] px-5 py-4 shadow-[0_5px_25px_rgba(0,0,0,0.03)] border border-gray-100 flex items-center justify-between">
+                                            <div className="flex items-center gap-3">
+                                                <div className={`w-12 h-12 rounded-full flex items-center justify-center text-2xl transition-all duration-700 ${goalMet ? 'bg-[#34C759]/10' : 'bg-[#4a90d9]/10'}`}>
+                                                    {goalMet ? '✅' : '🔔'}
+                                                </div>
+                                                <div>
+                                                    <p className="text-[11px] font-bold uppercase tracking-widest text-[#8E8E93]">Action</p>
+                                                    <p className="text-[10px] font-medium mt-0.5" style={{ color: goalMet ? '#34C759' : '#4a90d9' }}>
+                                                        {goalMet ? 'They crushed it!' : 'Send a reminder'}
+                                                    </p>
+                                                </div>
+                                            </div>
+                                            <div>
+                                                {goalMet ? (
+                                                    <button disabled className="px-5 py-2.5 rounded-full border-2 border-[#34C759]/30 text-[#34C759] text-[12px] font-bold opacity-80 cursor-default bg-[#34C759]/5">
+                                                        Completed
+                                                    </button>
+                                                ) : reminderSent ? (
+                                                    <button disabled className="px-5 py-2.5 rounded-full border-2 border-[#4a90d9]/30 text-[#4a90d9] text-[12px] font-bold cursor-default bg-[#4a90d9]/5">
+                                                        Sent!
+                                                    </button>
+                                                ) : (
+                                                    <button
+                                                        onClick={() => handleRemindClick(friend)}
+                                                        className="px-5 py-2.5 rounded-full bg-gradient-to-r from-[#7dd8d8] to-[#4a90d9] text-white text-[12px] font-bold hover:shadow-md active:scale-95 transition-all"
+                                                    >
+                                                        Remind
+                                                    </button>
+                                                )}
+                                            </div>
+                                        </div>
                                     </div>
-
-                                    {/* Status Pill */}
-                                    <div className="mb-5">
-                                        <StatusPill progress={progress} goalMet={goalMet} />
-                                    </div>
-
-                                    {/* Remind Button */}
-                                    {goalMet ? (
-                                        <button
-                                            disabled
-                                            className="px-6 py-3 rounded-full border-2 border-[#34C759]/30 text-[#34C759] text-[13px] font-bold opacity-80 cursor-default"
-                                        >
-                                            ✅ Already crushed it!
-                                        </button>
-                                    ) : reminderSent ? (
-                                        <button
-                                            disabled
-                                            className="px-6 py-3 rounded-full border-2 border-[#4a90d9]/30 text-[#4a90d9] text-[13px] font-bold cursor-default"
-                                        >
-                                            ✓ Reminder sent!
-                                        </button>
-                                    ) : (
-                                        <button
-                                            onClick={() => handleRemindClick(friend)}
-                                            className="px-6 py-3 rounded-full border-2 border-gray-200 text-[#1C1C1E] text-[13px] font-bold hover:border-[#4a90d9] hover:text-[#4a90d9] active:scale-95 transition-all"
-                                        >
-                                            🔔 Remind to drink
-                                        </button>
-                                    )}
                                 </div>
                             );
                         })}

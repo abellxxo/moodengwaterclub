@@ -193,6 +193,7 @@ export const loadFriendsData = async (groupMembers, selfUid) => {
         const streak = calculateStreak(history, goal, streakResetDate);
         const username = profile?.username || 'Unknown';
         const gradient = getGradientForUid(uid);
+        const matchaClaimed = tracker?.matchaClaimed || 0;
 
         return {
             id: uid,
@@ -202,6 +203,7 @@ export const loadFriendsData = async (groupMembers, selfUid) => {
             goal,
             current,
             streak,
+            matchaClaimed,
             uid,
         };
     }));
@@ -243,6 +245,7 @@ export const subscribeFriendsData = async (groupMembers, selfUid, callback) => {
             const streak = calculateStreak(history, goal, streakResetDate);
             const username = profile?.username || 'Unknown';
             const gradient = getGradientForUid(uid);
+            const matchaClaimed = tracker?.matchaClaimed || 0;
 
             friendsState[uid] = {
                 id: uid,
@@ -252,6 +255,7 @@ export const subscribeFriendsData = async (groupMembers, selfUid, callback) => {
                 goal,
                 current,
                 streak,
+                matchaClaimed,
                 uid,
             };
 
