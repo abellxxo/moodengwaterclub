@@ -261,7 +261,7 @@ export default function App() {
                 </div>
 
                 {/* FLOATING DOCK */}
-                <div className={`absolute bottom-8 left-1/2 -translate-x-1/2 px-6 py-4 bg-white/30 backdrop-blur-xl border border-white/50 shadow-[0_8px_32px_rgba(0,0,0,0.08)] rounded-[2.5rem] z-40 flex justify-center items-center gap-7 transition-all duration-500 ease-in-out ${s.currentView === 'home' ? 'translate-y-0 opacity-100' : 'translate-y-40 opacity-0 pointer-events-none'}`}>
+                <div className={`absolute bottom-8 left-1/2 -translate-x-1/2 w-[calc(100%-3rem)] py-4 px-8 bg-white/30 backdrop-blur-xl border border-white/50 shadow-[0_8px_32px_rgba(0,0,0,0.08)] rounded-[2.5rem] z-40 flex justify-between items-center transition-all duration-500 ease-in-out ${s.currentView === 'home' ? 'translate-y-0 opacity-100' : 'translate-y-40 opacity-0 pointer-events-none'}`}>
                     <button
                         onClick={() => s.updateWater(-200)}
                         disabled={s.isUpdating}
