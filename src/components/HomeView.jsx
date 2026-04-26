@@ -5,7 +5,7 @@ const STAGES = [
     {
         min: 0, max: 25,
         img: '/photos/char1.png',
-        text: "Let's get started! Your body needs water to thrive 🌱",
+        text: "Day just started, don’t forget your water 🌱",
     },
     {
         min: 25, max: 50,
@@ -15,12 +15,12 @@ const STAGES = [
     {
         min: 50, max: 100,
         img: '/photos/char3.png',
-        text: "You're doing amazing! Almost at your goal 🔥",
+        text: "Looking good, tinggal dikit lagi 🔥",
     },
     {
         min: 100, max: Infinity,
         img: '/photos/char4.png',
-        text: "You crushed it today! Hydration champion 🏆",
+        text: "Goal hit, love that for you🏆",
     },
 ];
 

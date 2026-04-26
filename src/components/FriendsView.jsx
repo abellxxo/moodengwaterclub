@@ -27,9 +27,9 @@ const MOCK_FRIENDS = [
 ];
 
 const REMIND_MESSAGES = [
-    { emoji: '💧', text: "Hey, have you drunk water today?" },
+    { emoji: '💧', text: "Drink water, no excuses!" },
     { emoji: '🥤', text: "Your bottle's looking thirsty rn!" },
-    { emoji: '🚨', text: "HYDRATE OR DIEDRATE bestie" },
+    { emoji: '🚨', text: "Air putih calling your name right now" },
 ];
 
 // ── Small water bottle for friend cards ────────────────────
@@ -98,7 +98,7 @@ function AddFriendSheet({ show, onClose, user }) {
     }, [show, user]);
 
     const handleCopy = () => {
-        navigator.clipboard.writeText(inviteLink).catch(() => {});
+        navigator.clipboard.writeText(inviteLink).catch(() => { });
         setCopied(true);
         setTimeout(() => {
             setCopied(false);
@@ -127,13 +127,12 @@ function AddFriendSheet({ show, onClose, user }) {
                 <button
                     onClick={handleCopy}
                     disabled={generating}
-                    className={`w-full py-4 rounded-2xl font-bold text-[15px] transition-all duration-300 ${
-                        copied
-                            ? 'bg-[#34C759] text-white'
-                            : generating
-                                ? 'bg-gray-200 text-gray-400 cursor-not-allowed'
-                                : 'bg-gradient-to-r from-[#7dd8d8] to-[#4a90d9] text-white active:scale-[0.98]'
-                    }`}
+                    className={`w-full py-4 rounded-2xl font-bold text-[15px] transition-all duration-300 ${copied
+                        ? 'bg-[#34C759] text-white'
+                        : generating
+                            ? 'bg-gray-200 text-gray-400 cursor-not-allowed'
+                            : 'bg-gradient-to-r from-[#7dd8d8] to-[#4a90d9] text-white active:scale-[0.98]'
+                        }`}
                 >
                     {copied ? 'Copied! ✓' : generating ? 'Please wait…' : 'Copy Link'}
                 </button>
@@ -192,11 +191,10 @@ function RemindSheet({ show, onClose, friend, onSent, user }) {
                             key={idx}
                             onClick={() => handleTapMessage(idx)}
                             disabled={sending}
-                            className={`w-full text-left px-5 py-4 rounded-2xl transition-all duration-200 ${
-                                sending
-                                    ? 'bg-[#F2F2F7] text-[#8E8E93] cursor-default'
-                                    : 'bg-[#F9F9FB] hover:bg-[#F2F2F7] active:scale-[0.98]'
-                            }`}
+                            className={`w-full text-left px-5 py-4 rounded-2xl transition-all duration-200 ${sending
+                                ? 'bg-[#F2F2F7] text-[#8E8E93] cursor-default'
+                                : 'bg-[#F9F9FB] hover:bg-[#F2F2F7] active:scale-[0.98]'
+                                }`}
                         >
                             <span className="text-[14px] font-medium text-[#1C1C1E]">
                                 {msg.emoji} {msg.text}
@@ -272,7 +270,7 @@ export default function FriendsView({ onBack, isVisible }) {
                 setLoading(false);
                 return;
             }
-            
+
             const unsubscribe = await subscribeFriendsData(group.members, user.uid, (friendsData) => {
                 if (friendsData.length > 0) {
                     setFriends(friendsData);
@@ -295,7 +293,7 @@ export default function FriendsView({ onBack, isVisible }) {
 
     useEffect(() => {
         loadFriends();
-        
+
         return () => {
             if (unsubRef.current) {
                 unsubRef.current();
@@ -506,11 +504,10 @@ export default function FriendsView({ onBack, isVisible }) {
                                 <button
                                     key={idx}
                                     onClick={() => goTo(idx)}
-                                    className={`rounded-full transition-all duration-300 ${
-                                        idx === activeIdx
-                                            ? 'w-6 h-2.5 bg-gradient-to-r from-[#7dd8d8] to-[#4a90d9]'
-                                            : 'w-2.5 h-2.5 bg-[#D1D1D6] hover:bg-[#AEAEB2]'
-                                    }`}
+                                    className={`rounded-full transition-all duration-300 ${idx === activeIdx
+                                        ? 'w-6 h-2.5 bg-gradient-to-r from-[#7dd8d8] to-[#4a90d9]'
+                                        : 'w-2.5 h-2.5 bg-[#D1D1D6] hover:bg-[#AEAEB2]'
+                                        }`}
                                 />
                             ))}
                         </div>
