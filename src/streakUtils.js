@@ -16,8 +16,6 @@ export const calculateStreak = (history = {}, goal = 1500, streakResetDate = nul
         safety++;
         const str = `${checkDate.getFullYear()}-${String(checkDate.getMonth() + 1).padStart(2, '0')}-${String(checkDate.getDate()).padStart(2, '0')}`;
 
-        if (streakResetDate && str <= streakResetDate) break;
-
         if ((history[str] || 0) >= goal) {
             currentStreak++;
             checkDate.setDate(checkDate.getDate() - 1);
