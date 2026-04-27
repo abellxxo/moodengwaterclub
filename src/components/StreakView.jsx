@@ -49,10 +49,6 @@ export default function StreakView({ streakCount, isTodayGoalMet, weekDays, isCl
                                 <span className="text-[13px] font-semibold text-[#4caf50]">{matchaClaimed === 1 ? 'cup' : 'cups'}</span>
                             </div>
                         </div>
-                        <div className="text-right">
-                            <p className="text-[10px] font-bold text-[#81c784] uppercase tracking-wide">Total</p>
-                            <p className="text-[10px] font-medium text-[#a5d6a7] mt-0.5">so far 🎉</p>
-                        </div>
                     </div>
                 </div>
             </div>
