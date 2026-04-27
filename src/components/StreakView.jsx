@@ -31,6 +31,31 @@ export default function StreakView({ streakCount, isTodayGoalMet, weekDays, isCl
             </div>
 
 
+            {/* Matcha Claimed Card */}
+            <div className="w-full mt-4">
+                <div className="w-full rounded-[2rem] p-5 shadow-[0_5px_20px_rgba(0,0,0,0.03)] border border-gray-100 overflow-hidden relative" style={{ background: 'linear-gradient(135deg, #e8f5e9, #f1f8e9, #fff8e1)' }}>
+                    {/* Decorative floating matcha emojis */}
+                    <div className="absolute top-2 right-3 text-[28px] opacity-20 rotate-12">🍵</div>
+                    <div className="absolute bottom-2 right-10 text-[18px] opacity-15 -rotate-6">🍃</div>
+
+                    <div className="flex items-center gap-4">
+                        <div className="w-14 h-14 rounded-2xl flex items-center justify-center text-[28px] shadow-sm" style={{ background: 'linear-gradient(135deg, #a8d5a2, #81c784)' }}>
+                            🍵
+                        </div>
+                        <div className="flex-1">
+                            <p className="text-[#6d8b64] text-[11px] font-bold tracking-widest uppercase">Matcha Claimed</p>
+                            <div className="flex items-baseline gap-1.5 mt-0.5">
+                                <span className="text-4xl font-bold tracking-tight text-[#2e7d32]">{matchaClaimed}</span>
+                                <span className="text-[13px] font-semibold text-[#4caf50]">{matchaClaimed === 1 ? 'cup' : 'cups'}</span>
+                            </div>
+                        </div>
+                        <div className="text-right">
+                            <p className="text-[10px] font-bold text-[#81c784] uppercase tracking-wide">Total</p>
+                            <p className="text-[10px] font-medium text-[#a5d6a7] mt-0.5">so far 🎉</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
 
             {/* Weekly Data Card */}
             <div className="w-full mt-4">
