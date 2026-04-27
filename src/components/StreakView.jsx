@@ -7,7 +7,7 @@ export default function StreakView({ streakCount, isTodayGoalMet, weekDays, isCl
     return (
         <>
             {/* Streak Card */}
-            <div className="bg-white w-full rounded-[2.5rem] p-8 shadow-[0_10px_40px_rgba(0,0,0,0.04)] border border-gray-100 flex flex-col items-center text-center mb-4 relative transition-all">
+            <div className="bg-white w-full rounded-[2.5rem] p-8 shadow-[0_10px_40px_rgba(0,0,0,0.04)] border border-gray-100 flex flex-col items-center text-center relative transition-all">
                 <button
                     onClick={() => setShowCalendar(true)}
                     className="absolute top-5 right-5 w-10 h-10 bg-[#F2F2F7] text-[#6ED8EA] rounded-full flex items-center justify-center hover:bg-[#E5E5EA] active:scale-90 transition-all"
@@ -39,7 +39,7 @@ export default function StreakView({ streakCount, isTodayGoalMet, weekDays, isCl
                     <div className="absolute bottom-2 right-10 text-[18px] opacity-15 -rotate-6">🍃</div>
 
                     <div className="flex items-center gap-4">
-                        <div className="w-14 h-14 rounded-2xl flex items-center justify-center text-[28px] shadow-sm" style={{ background: 'linear-gradient(135deg, #a8d5a2, #81c784)' }}>
+                        <div className="text-[28px] ml-1">
                             🍵
                         </div>
                         <div className="flex-1">
