@@ -84,8 +84,13 @@ export default function App() {
             <style dangerouslySetInnerHTML={{ __html: globalCss }} />
 
             <main ref={mainRef} className="bg-[#ffffff] w-full h-full sm:h-[844px] sm:max-w-[390px] sm:rounded-[3rem] overflow-hidden flex flex-col relative sm:shadow-2xl sm:ring-1 sm:ring-[#EAB0BE]/30 mx-auto">
-                <div className="absolute bottom-[-5%] right-[-10%] w-[80vw] max-w-[400px] h-[80vw] max-h-[400px] bg-[#EAB0BE]/50 rounded-full blur-[80px] pointer-events-none z-0"></div>
-                <div className="absolute bottom-[5%] left-[-10%] w-[60vw] max-w-[350px] h-[60vw] max-h-[350px] bg-[#B8E9F3]/50 rounded-full blur-[80px] pointer-events-none z-0"></div>
+                {/* PREMIUM MESH GRADIENT BACKGROUND */}
+                <div className="absolute top-[-5%] left-[-15%] w-[90vw] h-[90vw] bg-[#B8E9F3]/30 rounded-full blur-[120px] pointer-events-none z-0"></div>
+                <div className="absolute top-[15%] right-[-20%] w-[70vw] h-[70vw] bg-[#EAB0BE]/25 rounded-full blur-[100px] pointer-events-none z-0"></div>
+                <div className="absolute top-[40%] left-[10%] w-[60vw] h-[60vw] bg-[#E0BBE4]/20 rounded-full blur-[130px] pointer-events-none z-0"></div>
+                <div className="absolute bottom-[-10%] right-[-5%] w-[85vw] h-[85vw] bg-[#EAB0BE]/35 rounded-full blur-[120px] pointer-events-none z-0"></div>
+                <div className="absolute bottom-[10%] left-[-20%] w-[75vw] h-[75vw] bg-[#B8E9F3]/30 rounded-full blur-[110px] pointer-events-none z-0"></div>
+                <div className="absolute top-[25%] left-[25%] w-[40vw] h-[40vw] bg-[#FFF1E6]/40 rounded-full blur-[150px] pointer-events-none z-0"></div>
 
                 {showConfetti && width > 0 && (
                     <div className="absolute inset-0 pointer-events-none z-[99999] flex justify-center">
@@ -137,7 +142,7 @@ export default function App() {
                 />
 
                 {/* HEADER */}
-                <header className="pt-[calc(env(safe-area-inset-top)+1rem)] pb-4 px-8 z-30 bg-white/70 backdrop-blur-xl border-b border-gray-100/50 sticky top-0 transition-colors duration-500">
+                <header className="pt-[calc(env(safe-area-inset-top)+1rem)] pb-4 px-6 z-30 bg-transparent sticky top-0 transition-all duration-500">
                     <div className="flex justify-between items-center h-14">
                         <div>
                             <h1 className="text-2xl font-bold tracking-tight text-[#1C1C1E]">
@@ -232,7 +237,7 @@ export default function App() {
                     </div>
 
                     {/* STREAK */}
-                    <div className={`absolute inset-0 w-full h-full overflow-y-auto no-scrollbar flex flex-col items-center pt-8 pb-10 px-5 transition-all duration-500 ease-[cubic-bezier(0.2,0.8,0.2,1)] ${s.currentView === 'streak' ? 'translate-x-0 opacity-100 z-10' : 'translate-x-[100%] opacity-0 z-0 pointer-events-none'}`}>
+                    <div className={`absolute inset-0 w-full h-full overflow-y-auto no-scrollbar flex flex-col items-center pt-8 pb-10 px-6 transition-all duration-500 ease-[cubic-bezier(0.2,0.8,0.2,1)] ${s.currentView === 'streak' ? 'translate-x-0 opacity-100 z-10' : 'translate-x-[100%] opacity-0 z-0 pointer-events-none'}`}>
                         <StreakView
                             streakCount={s.streakCount}
                             isTodayGoalMet={s.isTodayGoalMet}
@@ -246,7 +251,7 @@ export default function App() {
                     </div>
 
                     {/* WEEKLY DATA */}
-                    <div className={`absolute inset-0 w-full h-full overflow-y-auto no-scrollbar flex flex-col items-center pt-4 pb-10 px-5 transition-all duration-500 ease-[cubic-bezier(0.2,0.8,0.2,1)] ${s.currentView === 'weeklyData' ? 'translate-x-0 opacity-100 z-10' : 'translate-x-[100%] opacity-0 z-0 pointer-events-none'}`}>
+                    <div className={`absolute inset-0 w-full h-full overflow-y-auto no-scrollbar flex flex-col items-center pt-4 pb-10 px-6 transition-all duration-500 ease-[cubic-bezier(0.2,0.8,0.2,1)] ${s.currentView === 'weeklyData' ? 'translate-x-0 opacity-100 z-10' : 'translate-x-[100%] opacity-0 z-0 pointer-events-none'}`}>
                         <WeeklyDataView
                             history={s.userData.history}
                             goal={s.userData.goal}
