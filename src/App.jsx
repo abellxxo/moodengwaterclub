@@ -91,13 +91,10 @@ export default function App() {
             <style dangerouslySetInnerHTML={{ __html: globalCss }} />
 
             <main ref={mainRef} className="bg-[#ffffff] w-full h-full sm:h-[844px] sm:max-w-[390px] sm:rounded-[3rem] overflow-hidden flex flex-col relative sm:shadow-2xl sm:ring-1 sm:ring-[#EAB0BE]/30 mx-auto">
-                {/* PREMIUM MESH GRADIENT BACKGROUND */}
-                <div className="absolute top-[-5%] left-[-15%] w-[90vw] h-[90vw] bg-[#B8E9F3]/30 rounded-full blur-[120px] pointer-events-none z-0"></div>
-                <div className="absolute top-[15%] right-[-20%] w-[70vw] h-[70vw] bg-[#EAB0BE]/25 rounded-full blur-[100px] pointer-events-none z-0"></div>
-                <div className="absolute top-[40%] left-[10%] w-[60vw] h-[60vw] bg-[#E0BBE4]/20 rounded-full blur-[130px] pointer-events-none z-0"></div>
-                <div className="absolute bottom-[-10%] right-[-5%] w-[85vw] h-[85vw] bg-[#EAB0BE]/35 rounded-full blur-[120px] pointer-events-none z-0"></div>
-                <div className="absolute bottom-[10%] left-[-20%] w-[75vw] h-[75vw] bg-[#B8E9F3]/30 rounded-full blur-[110px] pointer-events-none z-0"></div>
-                <div className="absolute top-[25%] left-[25%] w-[40vw] h-[40vw] bg-[#FFF1E6]/40 rounded-full blur-[150px] pointer-events-none z-0"></div>
+                {/* CLEAN WATER BLUE BACKGROUND */}
+                <div className="absolute top-[-10%] left-[-10%] w-[80vw] h-[80vw] bg-[#B8E9F3]/40 rounded-full blur-[100px] pointer-events-none z-0"></div>
+                <div className="absolute top-[30%] right-[-20%] w-[70vw] h-[70vw] bg-[#6ED8EA]/20 rounded-full blur-[120px] pointer-events-none z-0"></div>
+                <div className="absolute bottom-[-10%] left-[10%] w-[80vw] h-[80vw] bg-[#B8E9F3]/30 rounded-full blur-[110px] pointer-events-none z-0"></div>
 
                 {showConfetti && width > 0 && (
                     <div className="absolute inset-0 pointer-events-none z-[99999] flex justify-center">
