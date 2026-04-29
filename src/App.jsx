@@ -91,10 +91,12 @@ export default function App() {
             <style dangerouslySetInnerHTML={{ __html: globalCss }} />
 
             <main ref={mainRef} className="bg-[#ffffff] w-full h-full sm:h-[844px] sm:max-w-[390px] sm:rounded-[3rem] overflow-hidden flex flex-col relative sm:shadow-2xl sm:ring-1 sm:ring-[#EAB0BE]/30 mx-auto">
-                {/* CLEAN WATER BLUE BACKGROUND */}
-                <div className="absolute top-[-10%] left-[-10%] w-[80vw] h-[80vw] bg-[#B8E9F3]/40 rounded-full blur-[100px] pointer-events-none z-0"></div>
-                <div className="absolute top-[30%] right-[-20%] w-[70vw] h-[70vw] bg-[#6ED8EA]/20 rounded-full blur-[120px] pointer-events-none z-0"></div>
-                <div className="absolute bottom-[-10%] left-[10%] w-[80vw] h-[80vw] bg-[#B8E9F3]/30 rounded-full blur-[110px] pointer-events-none z-0"></div>
+                {/* MINIMAL WAVY GRID BACKGROUND */}
+                {/* Light Water Blue Base */}
+                <div className="absolute inset-0 bg-[#F0F9FF] pointer-events-none z-0"></div>
+
+                {/* Subtle Wavy Grid - The Only Element (Increased Spacing) */}
+                <div className="absolute inset-0 z-0 opacity-[0.06] pointer-events-none" style={{ backgroundImage: `url("data:image/svg+xml,%3Csvg width='60' height='40' viewBox='0 0 60 40' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M0 20c15 0 15-10 30-10s15 10 30 10 15-10 30-10 15 10 30 10' fill='none' stroke='%23000' stroke-width='2'/%3E%3C/svg%3E")`, backgroundSize: '60px 40px' }}></div>
 
                 {showConfetti && width > 0 && (
                     <div className="absolute inset-0 pointer-events-none z-[99999] flex justify-center">
