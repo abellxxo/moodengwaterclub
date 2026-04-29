@@ -22,6 +22,13 @@ export default function App() {
     const prevCountRef = useRef(s.currentCount);
     const isReadyForConfetti = useRef(false);
 
+    // Clear app badge when user opens the app
+    useEffect(() => {
+        if ('clearAppBadge' in navigator) {
+            navigator.clearAppBadge().catch(() => {});
+        }
+    }, []);
+
     useEffect(() => {
         if (s.dataLoaded) {
             if (isReadyForConfetti.current) {

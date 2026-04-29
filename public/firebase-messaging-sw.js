@@ -18,11 +18,16 @@ firebase.initializeApp({
 // Initialize messaging so FCM can register with the push service
 const messaging = firebase.messaging();
 
+// Suppress FCM SDK auto-display of notifications (prevents duplicates)
+messaging.onBackgroundMessage(() => {
+  // Do nothing — our raw 'push' handler below handles everything.
+});
+
 // ----------------------------------------------------------
 // FCM — Handle background push using raw 'push' event
 // We use DATA-ONLY payloads from the server (no 'notification' key)
 // so FCM SDK won't auto-display. Only this handler shows notifications.
-// iOS 16.4-16.7 requires explicit event.waitUntil() to avoid
+// iOS 16.4+ requires explicit event.waitUntil() to avoid
 // "silent push" permission revocation.
 // ----------------------------------------------------------
 self.addEventListener('push', (event) => {
@@ -69,7 +74,12 @@ self.addEventListener('push', (event) => {
 
   // CRITICAL: event.waitUntil() is REQUIRED on iOS.
   event.waitUntil(
-    self.registration.showNotification(title, notificationOptions)
+    self.registration.showNotification(title, notificationOptions).then(() => {
+      // Set app badge on home screen icon (iOS 16.4+ / supported browsers)
+      if (self.navigator && 'setAppBadge' in self.navigator) {
+        return self.navigator.setAppBadge(1);
+      }
+    })
   );
 });
 
@@ -93,7 +103,7 @@ self.addEventListener('notificationclick', (event) => {
 // ----------------------------------------------------------
 // PWA CACHE — Install & cache static assets
 // ----------------------------------------------------------
-const CACHE_NAME = 'water-tracker-v17';
+const CACHE_NAME = 'water-tracker-v18';
 const PRECACHE_ASSETS = [
   '/',
   '/index.html',

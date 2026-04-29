@@ -88,10 +88,6 @@ export default async function handler(req, res) {
                 payload: {
                     aps: {
                         'content-available': 1,
-                        alert: {
-                            title: 'Water Reminder 💧',
-                            body: message,
-                        },
                         sound: 'default',
                     },
                 },
