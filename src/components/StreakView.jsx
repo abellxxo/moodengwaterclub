@@ -57,18 +57,23 @@ export default function StreakView({ streakCount, isTodayGoalMet, weekDays, isCl
             <div className="w-full mt-4">
                 <button
                     onClick={onShowWeeklyData}
-                    className="w-full bg-white rounded-[2rem] p-4 shadow-[0_5px_20px_rgba(0,0,0,0.03)] border border-gray-100 flex items-center justify-between transition-all active:scale-95"
+                    className="w-full rounded-[2rem] p-4 shadow-[0_5px_20px_rgba(0,0,0,0.03)] border border-gray-100 flex items-center justify-between transition-all active:scale-95 overflow-hidden relative text-left"
+                    style={{ background: 'linear-gradient(135deg, #f0f4ff, #f8faff, #ffffff)' }}
                 >
-                    <div className="flex items-center gap-4">
-                        <div className="w-12 h-12 rounded-full flex items-center justify-center text-[22px]" style={{ background: 'linear-gradient(135deg, #1e1b3a, #2d2660)' }}>
+                    {/* Decorative floating emojis */}
+                    <div className="absolute top-2 right-12 text-[24px] opacity-10 rotate-12">📊</div>
+                    <div className="absolute bottom-1 right-20 text-[16px] opacity-10 -rotate-12">📈</div>
+
+                    <div className="flex items-center gap-4 relative z-10">
+                        <div className="w-12 h-12 rounded-full flex items-center justify-center text-[22px]" style={{ background: 'linear-gradient(135deg, #dbeafe, #bfdbfe)' }}>
                             📊
                         </div>
-                        <div className="text-left">
-                            <h4 className="text-[#1C1C1E] font-bold text-[15px]">Weekly Data</h4>
-                            <p className="text-[#8E8E93] text-[12px] font-medium mt-0.5">View your 7-day chart</p>
+                        <div>
+                            <h4 className="text-[#1e3a8a] font-bold text-[15px]">Weekly Data</h4>
+                            <p className="text-[#60a5fa] text-[12px] font-medium mt-0.5">View your 7-day chart</p>
                         </div>
                     </div>
-                    <div className="text-[#C7C7CC] pr-2">
+                    <div className="text-[#93c5fd] pr-2 relative z-10">
                         <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
                             <path fillRule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clipRule="evenodd" />
                         </svg>
@@ -81,22 +86,29 @@ export default function StreakView({ streakCount, isTodayGoalMet, weekDays, isCl
                 <button
                     onClick={handleClaimReward}
                     disabled={isClaiming}
-                    className={`w-full bg-white rounded-[2rem] p-4 shadow-[0_5px_20px_rgba(0,0,0,0.03)] border border-gray-100 flex items-center justify-between transition-all active:scale-95 ${isClaiming ? 'opacity-70 cursor-not-allowed' : ''}`}
+                    className={`w-full rounded-[2rem] p-4 shadow-[0_5px_20px_rgba(0,0,0,0.03)] border border-gray-100 flex items-center justify-between transition-all active:scale-95 overflow-hidden relative text-left ${isClaiming ? 'opacity-70 cursor-not-allowed' : ''}`}
+                    style={{ background: canClaim ? 'linear-gradient(135deg, #fff0f6, #fff5f8, #ffffff)' : 'linear-gradient(135deg, #f8f9fa, #fcfcfc, #ffffff)' }}
                 >
-                    <div className="flex items-center gap-4">
-                        <div className={`w-12 h-12 rounded-full flex items-center justify-center text-[22px] transition-all ${canClaim ? 'bg-[#EAB0BE]/20' : 'bg-gray-100 grayscale'}`}>🍵</div>
-                        <div className="text-left">
-                            <h4 className="text-[#1C1C1E] font-bold text-[15px]">
+                    {/* Decorative floating emojis */}
+                    <div className={`absolute top-2 right-12 text-[24px] opacity-10 rotate-12 ${!canClaim && 'grayscale'}`}>🎁</div>
+                    <div className={`absolute bottom-1 right-20 text-[18px] opacity-10 -rotate-6 ${!canClaim && 'grayscale'}`}>✨</div>
+
+                    <div className="flex items-center gap-4 relative z-10">
+                        <div className={`w-12 h-12 rounded-full flex items-center justify-center text-[22px] transition-all`} style={{ background: canClaim ? 'linear-gradient(135deg, #fbcfe8, #f9a8d4)' : 'linear-gradient(135deg, #e5e7eb, #f3f4f6)' }}>
+                            <span className={canClaim ? '' : 'grayscale opacity-50'}>🍵</span>
+                        </div>
+                        <div>
+                            <h4 className={`font-bold text-[15px] ${canClaim ? 'text-[#9d174d]' : 'text-[#4b5563]'}`}>
                                 {isClaiming ? 'Claiming...' : 'Claim your reward'}
                             </h4>
-                            <p className="text-[#8E8E93] text-[12px] font-medium mt-0.5">
+                            <p className={`text-[12px] font-medium mt-0.5 ${canClaim ? 'text-[#f472b6]' : 'text-[#9ca3af]'}`}>
                                 {canClaim
                                     ? 'Tap to claim your Matcha! 🎉'
                                     : `${daysLeft} more day${daysLeft !== 1 ? 's' : ''} to unlock`}
                             </p>
                         </div>
                     </div>
-                    <div className="text-[#C7C7CC] pr-2">
+                    <div className={`pr-2 relative z-10 ${canClaim ? 'text-[#fbcfe8]' : 'text-[#d1d5db]'}`}>
                         <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
                             <path fillRule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clipRule="evenodd" />
                         </svg>
