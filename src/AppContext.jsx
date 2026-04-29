@@ -322,11 +322,39 @@ export function useAppState() {
                     'Authorization': `Bearer ${idToken}`,
                 },
                 body: JSON.stringify({ senderName, totalMl }),
+                keepalive: true, // Ensure request finishes if app closes
             }).catch(err => console.error('Buddy drink notif failed:', err));
         } catch (err) {
             console.error('Failed to get token for buddy drink:', err);
         }
     };
+
+    // Flush pending buddy drink notif when app is closed/hidden
+    useEffect(() => {
+        const handleUnloadOrHide = () => {
+            if (buddyDrinkAccumRef.current > 0) {
+                const accumulated = buddyDrinkAccumRef.current;
+                buddyDrinkAccumRef.current = 0;
+                if (buddyDrinkTimerRef.current) {
+                    clearTimeout(buddyDrinkTimerRef.current);
+                    buddyDrinkTimerRef.current = null;
+                }
+                sendBuddyDrinkNotif(accumulated);
+            }
+        };
+
+        const onVisibilityChange = () => {
+            if (document.visibilityState === 'hidden') handleUnloadOrHide();
+        };
+
+        document.addEventListener('visibilitychange', onVisibilityChange);
+        window.addEventListener('beforeunload', handleUnloadOrHide);
+
+        return () => {
+            document.removeEventListener('visibilitychange', onVisibilityChange);
+            window.removeEventListener('beforeunload', handleUnloadOrHide);
+        };
+    }, [user]); // re-bind if user changes
 
     const updateWater = async (amount) => {
         if (!user || isUpdating) return;
