@@ -343,7 +343,7 @@ export function useAppState() {
                 await setDoc(userDocRef, { matchaClaimed: increment(1) }, { merge: true });
                 showToastMsg('Matcha claimed! 🍵', true);
                 const message = encodeURIComponent("Yay! I successfully completed my 7-day hydration streak! I'm ready to claim my Matcha reward 🍵✨");
-                window.open(`https://wa.me/6281231223796?text=${message}`, '_blank', 'noopener,noreferrer');
+                window.location.href = `https://wa.me/6281231223796?text=${message}`;
             } catch (error) {
                 console.error('Error claiming reward:', error);
                 showToastMsg('Failed to claim. Try again.', false);
