@@ -52,6 +52,10 @@ export function useAppState() {
     const customInputRef = useRef(null);
     const toastTimeoutRef = useRef(null);
 
+    // Buddy drink debounce refs
+    const buddyDrinkTimerRef = useRef(null);
+    const buddyDrinkAccumRef = useRef(0);
+
     // --- AUTHENTICATION ---
     useEffect(() => {
         const unsubscribe = onAuthStateChanged(auth, (u) => {
@@ -305,6 +309,25 @@ export function useAppState() {
         setIsClaiming(false);
     };
 
+    // --- BUDDY DRINK NOTIFICATION (debounced 60s) ---
+    const sendBuddyDrinkNotif = async (totalMl) => {
+        if (!user) return;
+        try {
+            const idToken = await user.getIdToken();
+            const senderName = user.displayName || user.email?.split('@')[0] || 'User';
+            fetch('/api/buddy-drink', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${idToken}`,
+                },
+                body: JSON.stringify({ senderName, totalMl }),
+            }).catch(err => console.error('Buddy drink notif failed:', err));
+        } catch (err) {
+            console.error('Failed to get token for buddy drink:', err);
+        }
+    };
+
     const updateWater = async (amount) => {
         if (!user || isUpdating) return;
         const today = getLogicalDateStr();
@@ -319,6 +342,20 @@ export function useAppState() {
         } catch (error) {
             console.error('Error updating water:', error);
             setIsUpdating(false);
+        }
+
+        // Debounced buddy drink notification (only for adding water, not removing)
+        if (amount > 0) {
+            buddyDrinkAccumRef.current += amount;
+            if (buddyDrinkTimerRef.current) clearTimeout(buddyDrinkTimerRef.current);
+            buddyDrinkTimerRef.current = setTimeout(() => {
+                const accumulated = buddyDrinkAccumRef.current;
+                buddyDrinkAccumRef.current = 0;
+                buddyDrinkTimerRef.current = null;
+                if (accumulated > 0) {
+                    sendBuddyDrinkNotif(accumulated);
+                }
+            }, 60000); // 60 seconds debounce
         }
     };
 
