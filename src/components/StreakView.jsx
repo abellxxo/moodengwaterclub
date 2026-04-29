@@ -33,13 +33,13 @@ export default function StreakView({ streakCount, isTodayGoalMet, weekDays, isCl
 
             {/* Matcha Claimed Card */}
             <div className="w-full mt-4">
-                <div className="w-full rounded-[2rem] p-5 shadow-[0_5px_20px_rgba(0,0,0,0.03)] border border-gray-100 overflow-hidden relative" style={{ background: 'linear-gradient(135deg, #e8f5e9, #f1f8e9, #fff8e1)' }}>
+                <div className="w-full rounded-[2rem] p-4 shadow-[0_5px_20px_rgba(0,0,0,0.03)] border border-gray-100 overflow-hidden relative" style={{ background: 'linear-gradient(135deg, #e8f5e9, #f1f8e9, #fff8e1)' }}>
                     {/* Decorative floating matcha emojis */}
                     <div className="absolute top-2 right-3 text-[28px] opacity-20 rotate-12">🍵</div>
                     <div className="absolute bottom-2 right-10 text-[18px] opacity-15 -rotate-6">🍃</div>
 
                     <div className="flex items-center gap-4">
-                        <div className="text-[28px] ml-1">
+                        <div className="w-12 h-12 rounded-full flex items-center justify-center text-[22px]" style={{ background: 'linear-gradient(135deg, #c8e6c9, #a5d6a7)' }}>
                             🍵
                         </div>
                         <div className="flex-1">
@@ -84,7 +84,7 @@ export default function StreakView({ streakCount, isTodayGoalMet, weekDays, isCl
                     className={`w-full bg-white rounded-[2rem] p-4 shadow-[0_5px_20px_rgba(0,0,0,0.03)] border border-gray-100 flex items-center justify-between transition-all active:scale-95 ${isClaiming ? 'opacity-70 cursor-not-allowed' : ''}`}
                 >
                     <div className="flex items-center gap-4">
-                        <div className={`w-12 h-12 rounded-full flex items-center justify-center text-[26px] transition-all ${canClaim ? 'bg-[#EAB0BE]/20' : 'bg-gray-100 grayscale'}`}>🍵</div>
+                        <div className={`w-12 h-12 rounded-full flex items-center justify-center text-[22px] transition-all ${canClaim ? 'bg-[#EAB0BE]/20' : 'bg-gray-100 grayscale'}`}>🍵</div>
                         <div className="text-left">
                             <h4 className="text-[#1C1C1E] font-bold text-[15px]">
                                 {isClaiming ? 'Claiming...' : 'Claim your reward'}
