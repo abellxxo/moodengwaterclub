@@ -411,7 +411,9 @@ export function useAppState() {
                 const userDocRef = doc(db, 'artifacts', APP_ID, 'users', user.uid, 'data', 'tracker');
                 await setDoc(userDocRef, { 
                     matchaClaimed: increment(1),
-                    [`streakClaims.${streakStartDate}`]: increment(1)
+                    streakClaims: {
+                        [streakStartDate]: increment(1)
+                    }
                 }, { merge: true });
                 showToastMsg('Matcha claimed! 🍵', true);
                 const message = encodeURIComponent("Yay! I successfully completed my 7-day hydration streak! I'm ready to claim my Matcha reward 🍵✨");
