@@ -254,13 +254,20 @@ export function useAppState() {
     const progress = Math.min((currentCount / userData.goal) * 100, 100);
 
     // --- STREAK CALC (memoized, uses shared utility) ---
-    const streakDetails = useMemo(() => {
-        return calculateStreakDetails(userData.history, userData.goal, userData.streakResetDate);
+    const streakCount = useMemo(() => {
+        return calculateStreak(userData.history, userData.goal, userData.streakResetDate);
     }, [userData.history, userData.goal, userData.streakResetDate]);
-    
-    const streakCount = streakDetails.count;
-    const streakStartDate = streakDetails.startDate;
-    const matchaClaimedThisStreak = userData.streakClaims?.[streakStartDate] || 0;
+
+    // --- MATCHA CLAIM LOGIC ---
+    // User can claim at every 7th streak day (7, 14, 21...)
+    // lastClaimedAtStreak tracks what streak count they last claimed at.
+    // If they break streak and restart, streakCount will be different → can claim again.
+    const lastClaimedAtStreak = userData.lastClaimedAtStreak || 0;
+    const nextClaimAt = lastClaimedAtStreak === 0
+        ? 7
+        : lastClaimedAtStreak + 7;
+    const canClaimMatcha = streakCount > 0 && streakCount >= nextClaimAt;
+    const daysUntilNextClaim = Math.max(0, nextClaimAt - streakCount);
 
     // --- WEEK DAYS (memoized) ---
     const weekDays = useMemo(() => {
@@ -402,20 +409,15 @@ export function useAppState() {
 
     const handleClaimReward = async () => {
         if (isClaimingRef.current || isClaiming) return;
-        
-        const claimedThisStreak = userData.streakClaims?.[streakStartDate] || 0;
-        const nextMilestone = 7 * (claimedThisStreak + 1);
 
-        if (streakCount >= nextMilestone) {
+        if (canClaimMatcha) {
             isClaimingRef.current = true;
             setIsClaiming(true);
             try {
                 const userDocRef = doc(db, 'artifacts', APP_ID, 'users', user.uid, 'data', 'tracker');
-                await setDoc(userDocRef, { 
+                await setDoc(userDocRef, {
                     matchaClaimed: increment(1),
-                    streakClaims: {
-                        [streakStartDate]: increment(1)
-                    }
+                    lastClaimedAtStreak: streakCount,
                 }, { merge: true });
                 showToastMsg('Matcha claimed! 🍵', true);
                 const message = encodeURIComponent("Yay! I successfully completed my 7-day hydration streak! I'm ready to claim my Matcha reward 🍵✨");
@@ -440,7 +442,7 @@ export function useAppState() {
         // Data
         userData, toast,
         // Derived
-        todayStr, currentCount, isTodayGoalMet, progress, streakCount, weekDays, matchaClaimedThisStreak,
+        todayStr, currentCount, isTodayGoalMet, progress, streakCount, weekDays, canClaimMatcha, daysUntilNextClaim,
         // Calendar
         showCalendar, setShowCalendar, calMonth, calYear, handlePrevMonth, handleNextMonth,
         // Custom modal

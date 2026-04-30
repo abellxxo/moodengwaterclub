@@ -239,6 +239,8 @@ export default function App() {
                             progress={s.progress}
                             weekDays={s.weekDays}
                             streakCount={s.streakCount}
+                            canClaimMatcha={s.canClaimMatcha}
+                            daysUntilNextClaim={s.daysUntilNextClaim}
                         />
                     </div>
 
@@ -253,6 +255,8 @@ export default function App() {
                             setShowCalendar={s.setShowCalendar}
                             onShowWeeklyData={() => s.setCurrentView('weeklyData')}
                             matchaClaimed={s.userData.matchaClaimed || 0}
+                            canClaimMatcha={s.canClaimMatcha}
+                            daysUntilNextClaim={s.daysUntilNextClaim}
                         />
                     </div>
 
