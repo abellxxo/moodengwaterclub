@@ -30,6 +30,7 @@ export function useAppState() {
     // UI
     const [isUpdating, setIsUpdating] = useState(false);
     const [isClaiming, setIsClaiming] = useState(false);
+    const isClaimingRef = useRef(false);
     const [currentView, setCurrentView] = useState('home');
 
     // Data
@@ -400,12 +401,13 @@ export function useAppState() {
     };
 
     const handleClaimReward = async () => {
-        if (isClaiming) return;
-
+        if (isClaimingRef.current || isClaiming) return;
+        
         const claimedThisStreak = userData.streakClaims?.[streakStartDate] || 0;
         const nextMilestone = 7 * (claimedThisStreak + 1);
 
         if (streakCount >= nextMilestone) {
+            isClaimingRef.current = true;
             setIsClaiming(true);
             try {
                 const userDocRef = doc(db, 'artifacts', APP_ID, 'users', user.uid, 'data', 'tracker');
@@ -422,6 +424,7 @@ export function useAppState() {
                 console.error('Error claiming reward:', error);
                 showToastMsg('Failed to claim. Try again.', false);
             } finally {
+                isClaimingRef.current = false;
                 setIsClaiming(false);
             }
         } else {
