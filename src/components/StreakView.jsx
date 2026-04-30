@@ -1,7 +1,7 @@
 import React from 'react';
 
-export default function StreakView({ streakCount, isTodayGoalMet, weekDays, isClaiming, handleClaimReward, setShowCalendar, onShowWeeklyData, matchaClaimed = 0 }) {
-    const nextMilestone = 7 * (matchaClaimed + 1);
+export default function StreakView({ streakCount, isTodayGoalMet, weekDays, isClaiming, handleClaimReward, setShowCalendar, onShowWeeklyData, matchaClaimed = 0, matchaClaimedThisStreak = 0 }) {
+    const nextMilestone = 7 * (matchaClaimedThisStreak + 1);
     const canClaim = streakCount >= nextMilestone;
     const daysLeft = nextMilestone - streakCount;
     return (

@@ -13,7 +13,7 @@ import {
     increment
 } from 'firebase/firestore';
 import { auth, db, APP_ID, messaging, getToken, onMessage } from './firebase';
-import { getLogicalDateStr, calculateStreak } from './streakUtils';
+import { getLogicalDateStr, calculateStreak, calculateStreakDetails } from './streakUtils';
 import { ensureProfile } from './friendsService';
 
 // Re-export for backward compatibility (canonical source is streakUtils.js)
@@ -253,9 +253,13 @@ export function useAppState() {
     const progress = Math.min((currentCount / userData.goal) * 100, 100);
 
     // --- STREAK CALC (memoized, uses shared utility) ---
-    const streakCount = useMemo(() => {
-        return calculateStreak(userData.history, userData.goal, userData.streakResetDate);
+    const streakDetails = useMemo(() => {
+        return calculateStreakDetails(userData.history, userData.goal, userData.streakResetDate);
     }, [userData.history, userData.goal, userData.streakResetDate]);
+    
+    const streakCount = streakDetails.count;
+    const streakStartDate = streakDetails.startDate;
+    const matchaClaimedThisStreak = userData.streakClaims?.[streakStartDate] || 0;
 
     // --- WEEK DAYS (memoized) ---
     const weekDays = useMemo(() => {
@@ -398,14 +402,17 @@ export function useAppState() {
     const handleClaimReward = async () => {
         if (isClaiming) return;
 
-        const claimed = userData.matchaClaimed || 0;
-        const nextMilestone = 7 * (claimed + 1);
+        const claimedThisStreak = userData.streakClaims?.[streakStartDate] || 0;
+        const nextMilestone = 7 * (claimedThisStreak + 1);
 
         if (streakCount >= nextMilestone) {
             setIsClaiming(true);
             try {
                 const userDocRef = doc(db, 'artifacts', APP_ID, 'users', user.uid, 'data', 'tracker');
-                await setDoc(userDocRef, { matchaClaimed: increment(1) }, { merge: true });
+                await setDoc(userDocRef, { 
+                    matchaClaimed: increment(1),
+                    [`streakClaims.${streakStartDate}`]: increment(1)
+                }, { merge: true });
                 showToastMsg('Matcha claimed! 🍵', true);
                 const message = encodeURIComponent("Yay! I successfully completed my 7-day hydration streak! I'm ready to claim my Matcha reward 🍵✨");
                 window.location.href = `https://wa.me/6281231223796?text=${message}`;
@@ -428,7 +435,7 @@ export function useAppState() {
         // Data
         userData, toast,
         // Derived
-        todayStr, currentCount, isTodayGoalMet, progress, streakCount, weekDays,
+        todayStr, currentCount, isTodayGoalMet, progress, streakCount, weekDays, matchaClaimedThisStreak,
         // Calendar
         showCalendar, setShowCalendar, calMonth, calYear, handlePrevMonth, handleNextMonth,
         // Custom modal

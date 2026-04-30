@@ -31,7 +31,7 @@ function getStage(progress) {
     return STAGES[0];
 }
 
-export default function HomeView({ currentCount, userData, isTodayGoalMet, progress, weekDays, streakCount }) {
+export default function HomeView({ currentCount, userData, isTodayGoalMet, progress, weekDays, streakCount, matchaClaimedThisStreak = 0 }) {
     const remaining = Math.max(0, userData.goal - currentCount);
     const stage = getStage(progress);
     const clampedProgress = Math.min(progress, 100);
@@ -107,9 +107,9 @@ export default function HomeView({ currentCount, userData, isTodayGoalMet, progr
                             </div>
                             <div>
                                 <p className="text-[11px] font-bold uppercase tracking-widest text-[#8E8E93]">Current Streak</p>
-                                <p className="text-[10px] font-medium mt-0.5" style={{ color: streakCount >= 7 * ((userData.matchaClaimed || 0) + 1) ? '#EAB0BE' : '#FF9500' }}>
+                                <p className="text-[10px] font-medium mt-0.5" style={{ color: streakCount >= 7 * (matchaClaimedThisStreak + 1) ? '#EAB0BE' : '#FF9500' }}>
                                     {(() => {
-                                        const nextMilestone = 7 * ((userData.matchaClaimed || 0) + 1);
+                                        const nextMilestone = 7 * (matchaClaimedThisStreak + 1);
                                         const daysLeft = nextMilestone - streakCount;
                                         if (daysLeft <= 0) return '🍵 Matcha unlocked!';
                                         return `🍵 ${daysLeft} day${daysLeft !== 1 ? 's' : ''} till matcha`;
