@@ -184,6 +184,31 @@ export function useAppState() {
                 }
                 setUserData({ goal: 1500, history: {}, streakResetDate: null, ...data });
                 setIsUpdating(false);
+
+                // --- ONE-TIME MIGRATION: streakClaims → lastClaimedAtStreak ---
+                // If old junk fields exist and new field doesn't, auto-migrate.
+                const hasOldJunk = data.streakClaims !== undefined || Object.keys(data).some(k => k.startsWith('streakClaims.'));
+                const hasNewField = data.lastClaimedAtStreak !== undefined;
+                if (hasOldJunk && !hasNewField) {
+                    console.log('[Migration] Migrating streakClaims → lastClaimedAtStreak');
+                    const claimed = data.matchaClaimed || 0;
+                    const migrationUpdate = {
+                        lastClaimedAtStreak: claimed * 7,
+                    };
+                    // Remove the old fields using deleteField
+                    import('firebase/firestore').then(({ deleteField }) => {
+                        const cleanupUpdate = { ...migrationUpdate };
+                        // Delete the nested map field
+                        if (data.streakClaims !== undefined) cleanupUpdate.streakClaims = deleteField();
+                        // Delete any dot-notation literal fields
+                        Object.keys(data).forEach(k => {
+                            if (k.startsWith('streakClaims.')) cleanupUpdate[k] = deleteField();
+                        });
+                        setDoc(userDocRef, cleanupUpdate, { merge: true })
+                            .then(() => console.log('[Migration] Done ✅'))
+                            .catch(e => console.error('[Migration] Failed:', e));
+                    });
+                }
             } else {
                 const initialData = { goal: 1500, history: {}, streakResetDate: null };
                 setDoc(userDocRef, initialData);
