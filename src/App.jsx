@@ -145,6 +145,7 @@ export default function App() {
                     onClose={() => s.setShowRewardModal(false)}
                     streakCount={s.streakCount}
                     matchaClaimed={s.userData.matchaClaimed || 0}
+                    daysUntilNextClaim={s.daysUntilNextClaim}
                 />
 
                 {/* HEADER */}

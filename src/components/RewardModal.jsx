@@ -1,11 +1,11 @@
 import React from 'react';
 
-export default function RewardModal({ show, onClose, streakCount, matchaClaimed = 0 }) {
-    const nextMilestone = 7 * (matchaClaimed + 1);
-    const daysLeft = nextMilestone - streakCount;
-    // Progress within current 7-day cycle
-    const cycleProgress = streakCount - (matchaClaimed * 7);
-    const cycleDays = Math.max(0, Math.min(cycleProgress, 7));
+export default function RewardModal({ show, onClose, streakCount, matchaClaimed = 0, daysUntilNextClaim = 7 }) {
+    // Use the same claim logic as AppContext — cycle resets when streak breaks
+    const daysLeft = daysUntilNextClaim;
+    // Progress within current 7-day cycle (streak mod 7, capped at 7)
+    const cycleProgress = streakCount % 7;
+    const cycleDays = streakCount > 0 && daysUntilNextClaim === 0 ? 7 : Math.max(0, Math.min(cycleProgress, 7));
 
     return (
         <div className={`absolute inset-0 z-50 flex items-end justify-center transition-all duration-300 ${show ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}>

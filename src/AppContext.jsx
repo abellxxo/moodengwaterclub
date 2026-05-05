@@ -287,7 +287,9 @@ export function useAppState() {
     // User can claim at every 7th streak day (7, 14, 21...)
     // lastClaimedAtStreak tracks what streak count they last claimed at.
     // If they break streak and restart, streakCount will be different → can claim again.
-    const lastClaimedAtStreak = userData.lastClaimedAtStreak || 0;
+    const rawLastClaimed = userData.lastClaimedAtStreak || 0;
+    // If streak broke and restarted (current streak < last claimed), reset claim tracking
+    const lastClaimedAtStreak = streakCount < rawLastClaimed ? 0 : rawLastClaimed;
     const nextClaimAt = lastClaimedAtStreak === 0
         ? 7
         : lastClaimedAtStreak + 7;
