@@ -27,7 +27,7 @@ const MOCK_FRIENDS = [
 ];
 
 const REMIND_MESSAGES = [
-    { emoji: '💧', text: "Drink water, no excuses!" },
+    { emoji: '💧', text: "Drink water, no excuses ya!" },
     { emoji: '🥤', text: "Your bottle's looking thirsty rn!" },
     { emoji: '🚨', text: "Air putih calling your name right now" },
 ];
@@ -416,7 +416,7 @@ export default function FriendsView({ onBack, isVisible }) {
                                     {/* RPG-style Friend Card */}
                                     <div className="bg-white w-full rounded-[2rem] p-7 shadow-[0_10px_40px_rgba(0,0,0,0.04)] border border-gray-100 mb-4 relative overflow-hidden">
                                         <div className="flex items-center gap-6 mb-6 h-32">
-                                            <div 
+                                            <div
                                                 className="w-32 h-32 flex-shrink-0 rounded-2xl flex items-center justify-center text-white text-4xl font-bold shadow-lg"
                                                 style={{
                                                     background: `linear-gradient(135deg, ${gradient[0]}, ${gradient[1]})`,
