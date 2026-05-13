@@ -19,6 +19,7 @@ export default function App() {
     const [mainRef, { width, height }] = useMeasure();
     const [showConfetti, setShowConfetti] = useState(false);
     const [confettiKey, setConfettiKey] = useState(0);
+    const [showGoodbyePopup, setShowGoodbyePopup] = useState(true);
     const prevCountRef = useRef(s.currentCount);
     const isReadyForConfetti = useRef(false);
 
@@ -120,6 +121,23 @@ export default function App() {
                         <span className="text-[13px] font-bold text-[#1C1C1E] whitespace-nowrap">{s.toast.message}</span>
                     </div>
                 </div>
+
+                {/* GOODBYE POPUP */}
+                {showGoodbyePopup && (
+                    <div className="absolute inset-0 z-[100] flex items-center justify-center bg-black/40 backdrop-blur-sm px-6">
+                        <div className="bg-white rounded-[2rem] p-8 w-full max-w-[320px] shadow-2xl flex flex-col items-center text-center animate-in fade-in zoom-in duration-300">
+                            <div className="w-32 h-32 mb-6 rounded-2xl bg-[#F9F9FB] flex items-center justify-center overflow-hidden shadow-inner">
+                                <img src="/photos/char1.png" alt="Sad Moodeng" className="w-full h-full object-contain" />
+                            </div>
+                            <h2 className="text-2xl font-bold text-[#1C1C1E] mb-3">Goodbye!</h2>
+                            <p className="text-[15px] font-medium text-[#8E8E93] leading-relaxed mb-6">
+                                Moodeng officially says goodbye. Thank you for all the love and support, and don't forget to always drink your water! 💧
+                                <br /><br />
+                                Moodeng will be with you forever... 🦛💙
+                            </p>
+                        </div>
+                    </div>
+                )}
 
                 {/* MODALS */}
                 <CalendarModal
